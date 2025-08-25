@@ -1,0 +1,20 @@
+module.exports = {
+  root: true,
+  env: {
+    node: true,
+    browser: true,
+    es2022: true
+  },
+  extends: ['eslint:recommended', 'plugin:vue/vue3-essential'],
+  parserOptions: {
+    ecmaVersion: 2022,
+    sourceType: 'module'
+  },
+  plugins: ['vue'],
+  rules: {
+    'vue/multi-word-component-names': 'off',
+    'no-unused-vars': 'warn',
+    'no-console': 'warn',
+    'no-debugger': 'warn'
+  }
+}
