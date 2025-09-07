@@ -29,6 +29,15 @@
         </ul>
       </nav>
     </div>
+
+    <div class="header-actions">
+      <div class="action-item dark"></div>
+      <div class="action-item dark">
+        <div class="form-switch" @click="isDark = !isDark" :class="{ active: isDark }">
+          <div class="form-switch-button"></div>
+        </div>
+      </div>
+    </div>
   </header>
 </template>
 
@@ -36,6 +45,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+const isDark = ref(false)
 const menuItem = ref([
   { name: 'Wheel', path: 'wheel' },
   { name: 'Profile', path: 'profile' },
