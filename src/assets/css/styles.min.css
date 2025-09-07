@@ -2216,6 +2216,9 @@ figure > img {
   font-size: 0.875rem;
   font-weight: 700;
   line-height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .text-sticker.round {
   border-radius: 12px;
@@ -11245,6 +11248,8 @@ figure > img {
   height: 120px;
   border-top-right-radius: 12px;
   border-top-left-radius: 12px;
+  background: unset;
+  background-size: unset;
 }
 .quest-item .text-sticker {
   position: absolute;

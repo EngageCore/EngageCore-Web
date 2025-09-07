@@ -263,10 +263,7 @@ const handleLogout = async () => {
 const formatMemberSince = () => {
   // Mock member since date
   const memberSince = new Date('2024-01-01')
-  return memberSince.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long'
-  })
+  return memberSince
 }
 
 // Initialize data

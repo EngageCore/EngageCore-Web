@@ -230,7 +230,7 @@ const formatPoints = points => {
   } else if (points >= 1000) {
     return (points / 1000).toFixed(1) + 'K'
   }
-  return points.toLocaleString()
+  return points
 }
 
 const formatTransactionDate = dateString => {

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '@/composables/useAuth.js'
+import BodyView from '@/layout/BodyView.vue'
 
 // Lazy load components for better performance
 const WheelView = () => import('@/views/WheelView.vue')
@@ -21,28 +22,34 @@ const routes = [
     meta: { requiresGuest: true }
   },
   {
-    path: '/wheel',
-    name: 'wheel',
-    component: WheelView,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/profile',
-    name: 'profile',
-    component: ProfileView,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/missions',
-    name: 'missions',
-    component: MissionsView,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/history',
-    name: 'history',
-    component: HistoryView,
-    meta: { requiresAuth: true }
+    path: '/',
+    component: BodyView,
+    children: [
+      {
+        path: '/wheel',
+        name: 'wheel',
+        component: WheelView,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/profile',
+        name: 'profile',
+        component: ProfileView,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/missions',
+        name: 'missions',
+        component: MissionsView,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/history',
+        name: 'history',
+        component: HistoryView,
+        meta: { requiresAuth: true }
+      },
+    ]
   },
   {
     path: '/:pathMatch(.*)*',

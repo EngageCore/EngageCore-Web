@@ -1,0 +1,60 @@
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-wrapper {
+  flex: 1;
+}
+
+.progress {
+  --grad-start: #6a5af9;
+  --grad-end:   #4cd4f7;
+  --track:      #ebebeb;
+  --percent: 0%;
+
+  position: relative;
+  width: 100%;      /* 始终占满 */
+  height: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+
+  background: linear-gradient(90deg, var(--grad-start) 0%, var(--grad-end) 100%);
+}
+
+.progress::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: var(--percent);  /* 从 percent 开始盖掉右边 */
+  height: 100%;
+  background: var(--track);
+  transition: left 0.3s ease;
+}
+
+.progress-text {
+  width: 40px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.button.disabled {
+  background-color: transparent;
+  color: #adafca;
+  box-shadow: none;
+  cursor: not-allowed;
+  border: 1px solid #adafca !important;
+}
+
+.button.disabled:active {
+  background-color: transparent;
+  color: #adafca;
+  box-shadow: none;
+  border: 1px solid #adafca !important;
+}
+
+button:focus {
+  outline: none;
+}
