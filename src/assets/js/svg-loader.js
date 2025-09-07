@@ -743,6 +743,42 @@ const svgWrap = document.createElement('div'),
     </symbol>
   </svg>
   <!-- /SVG LOGIN -->
+
+  <svg style="display: none;">
+    <symbol id="svg-level-gold" viewBox="0 0 128 128">
+      <!-- 盾牌主体 -->
+      <path d="M64 4 L120 32 L100 100 L64 124 L28 100 L8 32 Z"
+            fill="url(#gold-gradient)" stroke="#B8860B" stroke-width="3"/>
+
+      <!-- 左右翅膀 -->
+      <path d="M8 40 Q0 64 16 88" fill="none" stroke="#FFD700" stroke-width="5"/>
+      <path d="M120 40 Q128 64 112 88" fill="none" stroke="#FFD700" stroke-width="5"/>
+
+      <!-- 顶部皇冠 -->
+      <path d="M52 12 L64 2 L76 12 L70 20 L64 16 L58 20 Z"
+            fill="#FFD700" stroke="#B8860B" stroke-width="2"/>
+
+      <!-- 中心宝石 -->
+      <circle cx="64" cy="72" r="18"
+              fill="url(#gem-gold)" stroke="#FFFACD" stroke-width="3"/>
+
+      <!-- 渐变定义 -->
+      <defs>
+        <!-- 金属渐变 -->
+        <linearGradient id="gold-gradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#FFD700"/>
+          <stop offset="50%" stop-color="#FFC107"/>
+          <stop offset="100%" stop-color="#B8860B"/>
+        </linearGradient>
+        <!-- 宝石渐变 -->
+        <radialGradient id="gem-gold" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#FFFACD"/>
+          <stop offset="100%" stop-color="#FFD700"/>
+        </radialGradient>
+      </defs>
+    </symbol>
+  </svg>
+
 `;
 
 svgWrap.innerHTML = svgData;

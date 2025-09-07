@@ -9593,6 +9593,8 @@ figure > img {
   height: 100%;
   border-top-right-radius: 0;
   border-bottom-left-radius: 12px;
+  background: unset;
+  background-size: cover;
   position: absolute;
   top: 0;
   left: 0;
@@ -10319,6 +10321,8 @@ figure > img {
   height: 70px;
   border-top-right-radius: 12px;
   border-top-left-radius: 12px;
+  background: unset;
+  background-size: cover;
 }
 .streamer-box .streamer-box-info {
   padding: 50px 28px 32px;

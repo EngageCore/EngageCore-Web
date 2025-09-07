@@ -9,6 +9,7 @@ import '@/assets/css/bootstrap.min.css'
 import '@/assets/css/styles.min.css'
 import '@/assets/css/simplebar.css'
 import '@/assets/css/custom-style.css'
+import "tiny-slider/dist/tiny-slider.css"
 
 // js
 import '@/assets/js/svg-loader.js'
