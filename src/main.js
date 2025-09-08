@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 import './style.css'
 import App from './App.vue'
 import router from './router'
+import LuckyCanvas from '@lucky-canvas/vue'
 
 // css
 import '@/assets/css/bootstrap.min.css'
@@ -21,6 +22,7 @@ const pinia = createPinia()
 // 使用插件
 app.use(pinia)
 app.use(router)
+app.use(LuckyCanvas)
 
 // 挂载应用
 app.mount('#app')
