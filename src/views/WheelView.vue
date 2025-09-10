@@ -11,7 +11,11 @@
             :prizes="prizes"
             :blocks="blocks"
             :buttons="buttons"
-            :defaultConfig="{ speed: 20, accelerationTime: 2000, decelerationTime: 3000 }"
+            :defaultConfig="{ 
+              speed: 20, 
+              accelerationTime: 2000, 
+              decelerationTime: 3000
+            }"
             @end="onEnd"
           />
 
@@ -28,7 +32,7 @@
         </div>
       </div>
 
-      <!-- Right Side: Info Area -->
+      <!-- 右边信息区 -->
       <div class="grid-column">
         <!-- Daily Spin Status Card -->
         <div class="widget-box mb-1">
@@ -51,17 +55,6 @@
               <span class="font-semibold text-amber-600">85%</span>
             </div>
           </div>
-          
-          <!-- Progress Bar: Time Until Reset -->
-          <div class="mt-4 p-3 bg-blue-50 rounded-lg">
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-blue-700">Next Reset:</span>
-              <span class="font-medium text-blue-800">4h 32m</span>
-            </div>
-            <div class="w-full bg-blue-200 rounded-full h-2 mt-2">
-              <div class="bg-blue-500 h-2 rounded-full" style="width: 65%"></div>
-            </div>
-          </div>
         </div>
 
         <!-- Prize List Card -->
@@ -82,23 +75,9 @@
               </div>
               <span class="text-xs text-purple-600 font-medium">1000+</span>
             </div>
-            <div class="flex justify-between items-center py-2 px-3 bg-green-50 border border-green-100 rounded-lg">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🎁</span>
-                <span class="text-sm font-medium">Mystery Box</span>
-              </div>
-              <span class="text-xs text-green-600 font-medium">Random</span>
-            </div>
-            <div class="flex justify-between items-center py-2 px-3 bg-yellow-50 border border-yellow-100 rounded-lg">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">⭐</span>
-                <span class="text-sm font-medium">Lucky Star</span>
-              </div>
-              <span class="text-xs text-yellow-600 font-medium">50-200</span>
-            </div>
           </div>
-          
-          <!-- Current Result Display -->
+
+          <!-- 当前结果显示 -->
           <div v-if="result" class="mt-4 p-3 bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-dashed border-orange-300 rounded-lg text-center">
             <div class="text-lg font-bold text-orange-800">{{ result }}</div>
           </div>
@@ -115,7 +94,13 @@ import { ref, computed, onMounted, onUnmounted } from "vue"
 const DESKTOP_WHEEL_SIZE = "400px"
 const MOBILE_WHEEL_SIZE = "280px"
 const INIT_SPINS = 3
-const ICONS = ["💰","👑","🎲","🎰","🎁","⭐","🔥","🍀","🎶","⚡","🙈","🏆"]
+const ICONS = ["💰","👑","🎲","🎰","🎁","⭐","🔥","🍀"]
+
+// 静态资源
+import frameSvg from '@/assets/img/wheel/wheel-frame.svg'
+import baseSvg from '@/assets/img/wheel/wheel-base.svg'
+import pointerSvg from '@/assets/img/wheel/wheel-pointer.svg'
+import segmentsSvg from '@/assets/img/wheel/wheel-8-segments.svg'
 //#endregion
 
 //#region 状态管理
@@ -127,75 +112,80 @@ const windowWidth = ref(window.innerWidth)
 //#endregion
 
 //#region 响应式布局
-// 监听窗口大小变化
-const handleResize = () => {
-  windowWidth.value = window.innerWidth
-}
-
-// 根据屏幕大小计算转盘尺寸
-const wheelSize = computed(() => {
-  return windowWidth.value < 768 ? MOBILE_WHEEL_SIZE : DESKTOP_WHEEL_SIZE
-})
-
-// 生命周期管理
-onMounted(() => {
-  window.addEventListener('resize', handleResize)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-})
+const handleResize = () => { windowWidth.value = window.innerWidth }
+const wheelSize = computed(() => (windowWidth.value < 768 ? MOBILE_WHEEL_SIZE : DESKTOP_WHEEL_SIZE))
+onMounted(() => window.addEventListener("resize", handleResize))
+onUnmounted(() => window.removeEventListener("resize", handleResize))
 //#endregion
 
 //#region 转盘配置
-// 外圈装饰
+// blocks：叠底盘 + 外框
 const blocks = [
-  { padding: "15px", background: "#e5e7eb", borderRadius: 20 },
-  { padding: "8px", background: "#fff", borderRadius: 15 }
+  {
+    padding: "0px",
+    background: "transparent",
+    imgs: [{ src: baseSvg, width: "100%", height: "100%", top: "0%", left: "0%" }]
+  },
+  {
+    padding: "0px",
+    background: "transparent",
+    imgs: [{ src: segmentsSvg, width: "100%", height: "100%", top: "0%", left: "0%", rotate: true }]
+  },
+  {
+    padding: "0px", 
+    background: "transparent",
+    imgs: [{ src: frameSvg, width: "100%", height: "100%", top: "0%", left: "0%" }]
+  },
 ]
 
-// 奖品配置（红白相间）
-const prizes = computed(() => ICONS.map((icon, i) => ({
-  background: i % 2 === 0 ? "#e74c3c" : "#ffffff",
+// prizes：调整奖品位置，让它们更靠近轮盘内侧
+const prizes = computed(() => ICONS.map(icon => ({
+  background: "transparent",
+  // 使用内置分割线功能
+  borderColor: "#d4af37",      // 金色分割线
+  borderWidth: 2,              // 分割线宽度
+  borderRadius: "0px",         // 分割线样式
+  // 关键调整：设置内外半径，让奖品显示在合适的位置
+  radius: "60%",  // 奖品区域的外半径
+  range: 30,      // 奖品区域的径向范围（从60%向内30%）
   fonts: [
-    {
-      text: icon,
-      fontColor: i % 2 === 0 ? "#fff" : "#000",
-      fontSize: windowWidth.value < 768 ? "16px" : "18px"
+    { 
+      text: icon, 
+      fontColor: "#000", 
+      fontSize: windowWidth.value < 768 ? "20px" : "24px",
+      // 调整文字位置到40%
+      top: "40%"
     }
   ]
 })))
 
-// 中心圆心 + 指针
+// 中心按钮 + 指针 - 调整指针大小
 const buttons = [
   {
-    radius: "10px",       // 中心圆大小
-    background: "#000000",// 黑色圆心
-    pointer: true,        // 保留指针
-    fonts: []             // 不显示文字
+    radius: "25%",  // 减小中心按钮区域
+    background: "transparent",
+    imgs: [
+      {
+        src: pointerSvg,
+        width: "60px",   // 稍微缩小指针
+        height: "105px",
+        top: "-73px"
+      }
+    ]
   }
 ]
 //#endregion
 
 //#region 游戏逻辑
-// 点击开始
 const onStart = () => {
   if (spinsLeft.value <= 0) return
   spinsLeft.value--
   isSpinning.value = true
 
   myLucky.value.play()
-
-  // 选择目标奖品
   const targetIndex = Math.floor(Math.random() * prizes.value.length)
-  
-  // 延长时间让摇摆效果更明显
-  setTimeout(() => {
-    myLucky.value.stop(targetIndex)
-  }, 4000)
+  setTimeout(() => { myLucky.value.stop(targetIndex) }, 4000)
 }
-
-// 转盘结束
 const onEnd = (prize) => {
   isSpinning.value = false
   result.value = `🎉 Congratulations! You won: ${prize.fonts[0].text}`
@@ -210,17 +200,8 @@ const onEnd = (prize) => {
   align-items: center;
   padding: 20px;
 }
-
-/* 手机端转盘适配 */
 @media (max-width: 767px) {
-  .wheel-wrapper {
-    padding: 10px;
-  }
-  
-  /* 调整按钮在手机上的大小 */
-  .wheel-wrapper button {
-    padding: 12px 20px !important;
-    font-size: 16px !important;
-  }
+  .wheel-wrapper { padding: 10px; }
+  .wheel-wrapper button { padding: 12px 20px !important; font-size: 16px !important; }
 }
 </style>
