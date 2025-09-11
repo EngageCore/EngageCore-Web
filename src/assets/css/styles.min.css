@@ -2048,6 +2048,7 @@ figure > img {
   margin-left: -74px;
 }
 .user-short-description.big .user-short-description-title {
+  font-family: "Rajdhani", sans-serif;
   font-size: 1.5rem;
 }
 .user-short-description.big .user-short-description-text {
@@ -8117,6 +8118,8 @@ figure > img {
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
   height: 300px;
+  background: unset;
+  background-size: unset;
 }
 .profile-header .profile-header-info {
   height: 126px;

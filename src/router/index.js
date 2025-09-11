@@ -8,6 +8,7 @@ const ProfileView = () => import('@/views/ProfileView.vue')
 const MissionsView = () => import('@/views/MissionsView.vue')
 const HistoryView = () => import('@/views/HistoryView.vue')
 const LoginView = () => import('@/views/LoginView.vue')
+const MembershipListView = () => import('@/views/MembershipListView.vue')
 
 // 定义路由配置
 const routes = [
@@ -47,6 +48,12 @@ const routes = [
         path: '/history',
         name: 'history',
         component: HistoryView,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/membership-list',
+        name: 'membership-list',
+        component: MembershipListView,
         meta: { requiresAuth: true }
       },
     ]
