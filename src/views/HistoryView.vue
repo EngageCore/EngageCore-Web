@@ -1,450 +1,211 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <div class="flex items-center space-x-4">
-            <h1 class="text-2xl font-bold text-gray-900">📊 History</h1>
+  <div class="content-grid">
+    <!-- Section Header -->
+    <div class="section-header">
+      <div class="section-header-info">
+        <p class="section-pretitle">Your Accomplishments</p>
+        <h2 class="section-title">Quest History</h2>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="section-filters-bar v2">
+      <form class="form">
+        <div class="form-item split medium">
+          <div class="form-select">
+            <label for="quest-filter-show">Show</label>
+            <select id="quest-filter-show" v-model="filterShow">
+              <option value="all">All Quests</option>
+              <option value="completed">Completed Quests</option>
+              <option value="in-progress">In Progress</option>
+            </select>
+            <svg class="form-select-icon icon-small-arrow">
+              <use xlink:href="#svg-small-arrow"></use>
+            </svg>
           </div>
-          <nav class="flex space-x-8">
-            <router-link to="/wheel" class="text-gray-500 hover:text-gray-700">
-              Wheel
-            </router-link>
-            <router-link
-              to="/profile"
-              class="text-gray-500 hover:text-gray-700"
-            >
-              Profile
-            </router-link>
-            <router-link
-              to="/missions"
-              class="text-gray-500 hover:text-gray-700"
-            >
-              Missions
-            </router-link>
-            <router-link to="/history" class="text-blue-600 font-medium">
-              History
-            </router-link>
-          </nav>
-          <div class="flex items-center space-x-4">
-            <div class="text-sm text-gray-600">
-              <span class="font-medium">{{ userDisplayName }}</span>
-              <div class="text-xs">{{ currentPoints }} points</div>
+
+          <div class="form-select">
+            <label for="quest-filter-criteria">Filter By</label>
+            <select id="quest-filter-criteria" v-model="filterDifficulty">
+              <option value="all">All Difficulties</option>
+              <option value="gold">Gold</option>
+              <option value="silver">Silver</option>
+            </select>
+            <svg class="form-select-icon icon-small-arrow">
+              <use xlink:href="#svg-small-arrow"></use>
+            </svg>
+          </div>
+
+          <div class="form-select">
+            <label for="quest-filter-order">Order By</label>
+            <select id="quest-filter-order" v-model="filterOrder">
+              <option value="date-desc">Newest First</option>
+              <option value="date-asc">Oldest First</option>
+              <option value="exp-desc">EXP High → Low</option>
+              <option value="exp-asc">EXP Low → High</option>
+            </select>
+            <svg class="form-select-icon icon-small-arrow">
+              <use xlink:href="#svg-small-arrow"></use>
+            </svg>
+          </div>
+
+          <button type="button" class="button secondary" @click="applyFilters">Filter Quests</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Table -->
+    <div class="table table-quests split-rows">
+      <div class="table-header">
+        <div class="table-header-column"><p class="table-header-title">Quest</p></div>
+        <div class="table-header-column"><p class="table-header-title">Description</p></div>
+        <div class="table-header-column centered padded-big-left"><p class="table-header-title">Experience</p></div>
+        <div class="table-header-column padded-big-left"><p class="table-header-title">Completed On</p></div>
+      </div>
+
+      <div class="table-body same-color-rows">
+        <div class="table-row small" v-for="quest in paginatedQuests" :key="quest.title">
+          <div class="table-column">
+            <div class="table-information">
+              <img class="table-image"
+                   v-if="quest.difficulty === 'gold'"
+                   src="@/assets/img/quest/completedq-s.png"
+                   alt="gold-badge" />
+              <img class="table-image"
+                   v-else
+                   src="@/assets/img/quest/openq-s.png"
+                   alt="silver-badge" />
+              <p class="table-title">{{ quest.title }}</p>
             </div>
-            <button
-              @click="handleLogout"
-              class="text-gray-500 hover:text-gray-700"
-            >
-              Logout
-            </button>
+          </div>
+          <div class="table-column">
+            <p class="table-text">{{ quest.description }}</p>
+          </div>
+          <div class="table-column centered padded-big-left">
+            <p class="text-sticker void">
+              <svg class="text-sticker-icon icon-plus-small">
+                <use xlink:href="#svg-plus-small"></use>
+              </svg>
+              {{ quest.exp }} EXP
+            </p>
+          </div>
+          <div class="table-column padded-big-left">
+            <p class="table-text">{{ formatDate(quest.completedAt) }}</p>
+          </div>
+        </div>
+
+        <div v-if="paginatedQuests.length === 0" class="table-row">
+          <div class="table-column" style="grid-column: 1 / -1;">
+            <p class="table-text">No records found.</p>
           </div>
         </div>
       </div>
-    </header>
+    </div>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <div class="flex items-center">
-            <div class="p-3 rounded-full bg-blue-100 text-blue-600">🎰</div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600">Total Spins</p>
-              <p class="text-2xl font-bold text-gray-900">{{ totalSpins }}</p>
-            </div>
-          </div>
-        </div>
+    <!-- Pagination -->
+    <div class="section-pager-bar" v-if="totalPages > 1">
+      <div class="section-pager">
+        <a class="section-pager-item"
+           :class="{ disabled: currentPage === 1 }"
+           @click.prevent="prevPage">
+          <svg class="section-pager-item-icon icon-small-arrow">
+            <use xlink:href="#svg-small-arrow"></use>
+          </svg>
+        </a>
 
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <div class="flex items-center">
-            <div class="p-3 rounded-full bg-green-100 text-green-600">💰</div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600">Points Won</p>
-              <p class="text-2xl font-bold text-gray-900">
-                {{ totalPointsWon }}
-              </p>
-            </div>
-          </div>
-        </div>
+        <a v-for="p in pagesToShow"
+           :key="p.key"
+           class="section-pager-item"
+           :class="{ active: p.num === currentPage, disabled: p.ellipsis }"
+           @click.prevent="!p.ellipsis && goToPage(p.num)">
+          <p class="section-pager-item-text">{{ p.ellipsis ? '…' : p.num }}</p>
+        </a>
 
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <div class="flex items-center">
-            <div class="p-3 rounded-full bg-purple-100 text-purple-600">🎯</div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600">Missions Done</p>
-              <p class="text-2xl font-bold text-gray-900">
-                {{ totalMissionsCompleted }}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-lg p-6">
-          <div class="flex items-center">
-            <div class="p-3 rounded-full bg-amber-100 text-amber-600">🏆</div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600">Mission Points</p>
-              <p class="text-2xl font-bold text-gray-900">
-                {{ totalPointsEarned }}
-              </p>
-            </div>
-          </div>
-        </div>
+        <a class="section-pager-item"
+           :class="{ disabled: currentPage === totalPages }"
+           @click.prevent="nextPage">
+          <svg class="section-pager-item-icon icon-small-arrow" style="transform: scaleX(-1);">
+            <use xlink:href="#svg-small-arrow"></use>
+          </svg>
+        </a>
       </div>
-
-      <!-- History Tabs -->
-      <div class="bg-white rounded-xl shadow-lg mb-6">
-        <div class="border-b border-gray-200">
-          <nav class="-mb-px flex space-x-8 px-6">
-            <button
-              v-for="tab in historyTabs"
-              :key="tab.key"
-              @click="activeTab = tab.key"
-              :class="[
-                'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
-                activeTab === tab.key
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              ]"
-            >
-              {{ tab.icon }} {{ tab.label }}
-            </button>
-          </nav>
-        </div>
-      </div>
-
-      <!-- History Content -->
-      <div class="bg-white rounded-xl shadow-lg">
-        <!-- Filters -->
-        <div class="p-6 border-b border-gray-200">
-          <div
-            class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0"
-          >
-            <div class="flex items-center space-x-4">
-              <div>
-                <label
-                  for="date-filter"
-                  class="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Date Range
-                </label>
-                <select
-                  id="date-filter"
-                  v-model="dateFilter"
-                  class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">All Time</option>
-                  <option value="today">Today</option>
-                  <option value="week">This Week</option>
-                  <option value="month">This Month</option>
-                </select>
-              </div>
-
-              <div v-if="activeTab === 'spins'">
-                <label
-                  for="prize-filter"
-                  class="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Prize Type
-                </label>
-                <select
-                  id="prize-filter"
-                  v-model="prizeFilter"
-                  class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">All Prizes</option>
-                  <option value="10">10 Points</option>
-                  <option value="25">25 Points</option>
-                  <option value="50">50 Points</option>
-                  <option value="100">100+ Points</option>
-                </select>
-              </div>
-
-              <div v-if="activeTab === 'missions'">
-                <label
-                  for="mission-type-filter"
-                  class="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Mission Type
-                </label>
-                <select
-                  id="mission-type-filter"
-                  v-model="missionTypeFilter"
-                  class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">All Types</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="flex items-center space-x-2">
-              <button
-                @click="refreshHistory"
-                :disabled="loading"
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
-              >
-                <svg
-                  class="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  ></path>
-                </svg>
-                <span>Refresh</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- History List -->
-        <div class="p-6">
-          <div v-if="loading" class="text-center py-8">
-            <div
-              class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"
-            ></div>
-            <p class="text-gray-600 mt-2">Loading history...</p>
-          </div>
-
-          <div
-            v-else-if="filteredHistory.length === 0"
-            class="text-center py-8"
-          >
-            <div class="text-gray-400 text-6xl mb-4">📊</div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">
-              No history found
-            </h3>
-            <p class="text-gray-600">{{ getEmptyStateMessage() }}</p>
-          </div>
-
-          <div v-else class="space-y-4">
-            <!-- Spin History -->
-            <div v-if="activeTab === 'spins'">
-              <SpinHistory
-                :history="filteredHistory"
-                :show-pagination="true"
-                @load-more="loadMoreSpinHistory"
-              />
-            </div>
-
-            <!-- Mission History -->
-            <div v-if="activeTab === 'missions'">
-              <MissionHistory
-                :history="filteredHistory"
-                :show-pagination="true"
-                @load-more="loadMoreMissionHistory"
-              />
-            </div>
-
-            <!-- Points History -->
-            <div v-if="activeTab === 'points'">
-              <PointsHistory
-                :history="filteredHistory"
-                :show-pagination="true"
-                @load-more="loadMorePointsHistory"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
+    </div>
   </div>
 </template>
 
 <script setup>
-import MissionHistory from '@/components/missions/MissionHistory.vue'
-import PointsHistory from '@/components/profile/PointsHistory.vue'
-import SpinHistory from '@/components/wheel/SpinHistory.vue'
-import { useAuth } from '@/composables/useAuth.js'
-import { useMissions } from '@/composables/useMissions.js'
-import { useWheel } from '@/composables/useWheel.js'
-import { mockUserService } from '@/services/userService.js'
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watchEffect } from 'vue'
 
-const router = useRouter()
-
-// Composables
-const { currentPoints, getUserDisplayName, logout } = useAuth()
-
-const { spinHistory, totalSpins, totalPointsWon, loadSpinHistory } = useWheel()
-
-const { totalPointsEarned, loadMissionHistory } = useMissions()
-
-// Local state
-const loading = ref(false)
-const activeTab = ref('spins')
-const dateFilter = ref('all')
-const prizeFilter = ref('all')
-const missionTypeFilter = ref('all')
-const pointsHistory = ref([])
-const missionHistory = ref([])
-const totalMissionsCompleted = ref(0)
-
-// Computed
-const userDisplayName = computed(() => getUserDisplayName())
-
-const historyTabs = computed(() => [
-  { key: 'spins', label: 'Spin History', icon: '🎰' },
-  { key: 'missions', label: 'Mission History', icon: '🎯' },
-  { key: 'points', label: 'Points History', icon: '💰' }
+const quests = ref([
+  { title: "First Deposit", description: "Make your first deposit into your account", exp: 20, difficulty: "silver", status: "claimed", completedAt: "2025-08-12" },
+  { title: "Turnover King", description: "Achieve a total turnover of $50,000", exp: 100, difficulty: "gold", status: "claimed", completedAt: "2025-08-28" },
+  { title: "High Roller", description: "Deposit a total of $10,000", exp: 60, difficulty: "gold", status: "claimed", completedAt: "2025-09-03" },
+  { title: "Cash Out Pro", description: "Withdraw at least $5,000 in total", exp: 60, difficulty: "silver", status: "claimed", completedAt: "2025-09-05" },
+  { title: "Weekly Winner", description: "Deposit at least $2,000 in one week", exp: 50, difficulty: "silver", status: "claimed", completedAt: "2025-09-07" },
 ])
 
-const filteredHistory = computed(() => {
-  let history = []
+const filterShow = ref('all')
+const filterDifficulty = ref('all')
+const filterOrder = ref('date-desc')
+const currentPage = ref(1)
+const pageSize = 5
 
-  switch (activeTab.value) {
-    case 'spins':
-      history = spinHistory.value
-      break
-    case 'missions':
-      history = missionHistory.value
-      break
-    case 'points':
-      history = pointsHistory.value
-      break
+const filteredQuests = computed(() => {
+  let list = [...quests.value]
+
+  // 只允许 claimed 和 in-progress (只是保留结构，历史中几乎全是 claimed)
+  if (filterShow.value === 'completed') list = list.filter(q => q.status === 'claimed')
+  else if (filterShow.value === 'in-progress') list = list.filter(q => q.status === 'in-progress')
+
+  if (filterDifficulty.value !== 'all')
+    list = list.filter(q => q.difficulty === filterDifficulty.value)
+
+  switch (filterOrder.value) {
+    case 'date-asc': list.sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt)); break
+    case 'exp-desc': list.sort((a, b) => b.exp - a.exp); break
+    case 'exp-asc': list.sort((a, b) => a.exp - b.exp); break
+    default: list.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
   }
-
-  // Apply date filter
-  if (dateFilter.value !== 'all') {
-    const now = new Date()
-    const filterDate = new Date()
-
-    switch (dateFilter.value) {
-      case 'today':
-        filterDate.setHours(0, 0, 0, 0)
-        break
-      case 'week':
-        filterDate.setDate(now.getDate() - 7)
-        break
-      case 'month':
-        filterDate.setMonth(now.getMonth() - 1)
-        break
-    }
-
-    history = history.filter(item => {
-      const itemDate = new Date(item.spinDate || item.claimedAt || item.date)
-      return itemDate >= filterDate
-    })
-  }
-
-  // Apply specific filters
-  if (activeTab.value === 'spins' && prizeFilter.value !== 'all') {
-    if (prizeFilter.value === '100') {
-      history = history.filter(item => item.prizeValue >= 100)
-    } else {
-      history = history.filter(
-        item => item.prizeValue === parseInt(prizeFilter.value)
-      )
-    }
-  }
-
-  if (activeTab.value === 'missions' && missionTypeFilter.value !== 'all') {
-    history = history.filter(item => item.type === missionTypeFilter.value)
-  }
-
-  return history
+  return list
 })
 
-// Methods
-const loadPointsHistory = async () => {
-  try {
-    const result = await mockUserService.getPointsHistory()
-    if (result.success) {
-      pointsHistory.value = result.data.transactions || []
-    }
-  } catch (error) {
-    console.error('Failed to load points history:', error)
-  }
-}
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredQuests.value.length / pageSize)))
 
-const loadMissionHistoryData = async () => {
-  try {
-    const result = await loadMissionHistory()
-    if (result.success) {
-      missionHistory.value = result.data.history || []
-      totalMissionsCompleted.value = result.data.total || 0
-    }
-  } catch (error) {
-    console.error('Failed to load mission history:', error)
-  }
-}
-
-const refreshHistory = async () => {
-  loading.value = true
-  try {
-    await Promise.all([
-      loadSpinHistory(),
-      loadMissionHistoryData(),
-      loadPointsHistory()
-    ])
-  } catch (error) {
-    console.error('Failed to refresh history:', error)
-  } finally {
-    loading.value = false
-  }
-}
-
-const loadMoreSpinHistory = async () => {
-  // Implement pagination for spin history
-  console.log('Load more spin history')
-}
-
-const loadMoreMissionHistory = async () => {
-  // Implement pagination for mission history
-  console.log('Load more mission history')
-}
-
-const loadMorePointsHistory = async () => {
-  // Implement pagination for points history
-  console.log('Load more points history')
-}
-
-const getEmptyStateMessage = () => {
-  switch (activeTab.value) {
-    case 'spins':
-      return 'Start spinning the wheel to see your spin history!'
-    case 'missions':
-      return 'Complete missions to see your mission history!'
-    case 'points':
-      return 'Earn points to see your points history!'
-    default:
-      return 'No data available.'
-  }
-}
-
-const handleLogout = async () => {
-  try {
-    await logout()
-    router.push('/login')
-  } catch (error) {
-    console.error('Logout failed:', error)
-  }
-}
-
-// Watch for tab changes to reset filters
-watch(activeTab, () => {
-  dateFilter.value = 'all'
-  prizeFilter.value = 'all'
-  missionTypeFilter.value = 'all'
+watchEffect(() => {
+  if (currentPage.value > totalPages.value) currentPage.value = totalPages.value
 })
 
-// Initialize data
-onMounted(async () => {
-  await refreshHistory()
+const paginatedQuests = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredQuests.value.slice(start, start + pageSize)
 })
+
+const applyFilters = () => { currentPage.value = 1 }
+
+const goToPage = (p) => { currentPage.value = p }
+const prevPage = () => { if (currentPage.value > 1) currentPage.value-- }
+const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++ }
+
+const pagesToShow = computed(() => {
+  const total = totalPages.value
+  const cur = currentPage.value
+  const items = []
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) items.push({ num: i, ellipsis: false, key: i })
+    return items
+  }
+  items.push({ num: 1, ellipsis: false, key: 'p1' })
+  if (cur > 4) items.push({ ellipsis: true, key: 'l-ellipsis' })
+  const start = Math.max(2, cur - 1)
+  const end = Math.min(total - 1, cur + 1)
+  for (let i = start; i <= end; i++) items.push({ num: i, ellipsis: false, key: `p${i}` })
+  if (cur < total - 3) items.push({ ellipsis: true, key: 'r-ellipsis' })
+  items.push({ num: total, ellipsis: false, key: `p${total}` })
+  return items
+})
+
+const formatDate = (dateStr) => {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
 </script>
-
-<style scoped>
-/* Add any component-specific styles here */
-</style>

@@ -8,7 +8,7 @@
           </svg>
         </div>
 
-        <h1 class="header-brand-text">Vikinger</h1>
+        <h1 class="header-brand-text">Engage Core</h1>
       </div>
     </div>
 
