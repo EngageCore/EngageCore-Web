@@ -37,24 +37,55 @@
     <div class="game-content">
       <!-- Main Game Area -->
       <div class="main-game-area">
-        <!-- Simplified Wheel Container -->
+        <!-- Enhanced Wheel Container -->
         <div class="wheel-container">
+          <!-- Outer Decorative Ring -->
+          <div class="wheel-outer-ring">
+            <div class="ring-1 ring-decoration"></div>
+            <div class="ring-2 ring-decoration"></div>
+            <div class="ring-decoration ring-3"></div>
+          </div>
+          
+          <!-- Wheel Frame Layers -->
+          <div class="wheel-frame-layers">
+            <div class="frame-layer frame-outer"></div>
+            <div class="frame-layer frame-middle"></div>
+            <div class="frame-layer frame-inner"></div>
+          </div>
+          
           <!-- Lucky Wheel -->
           <div class="wheel-wrapper">
-            <LuckyWheel
-              ref="myLucky"
-              :width="wheelSize"
-              :height="wheelSize"
-              :prizes="prizes"
-              :blocks="blocks"
-              :buttons="buttons"
-              :defaultConfig="{ 
-                speed: 20, 
-                accelerationTime: 2000, 
-                decelerationTime: 3000
-              }"
-              @end="onEnd"
-            />
+            <!-- Wheel Shadow Base -->
+            <div class="wheel-shadow-base"></div>
+            
+            <!-- Main Wheel -->
+            <div class="wheel-main">
+              <LuckyWheel
+                ref="myLucky"
+                :width="wheelSize"
+                :height="wheelSize"
+                :prizes="prizes"
+                :blocks="blocks"
+                :buttons="buttons"
+                :defaultConfig="{ 
+                  speed: 20, 
+                  accelerationTime: 2000, 
+                  decelerationTime: 3000
+                }"
+                @end="onEnd"
+              />
+            </div>
+            
+            <!-- Wheel Highlight Overlay -->
+            <div class="wheel-highlight-overlay"></div>
+          </div>
+          
+          <!-- Corner Decorations -->
+          <div class="corner-decorations">
+            <div class="corner-decoration corner-tl"></div>
+            <div class="corner-decoration corner-tr"></div>
+            <div class="corner-decoration corner-bl"></div>
+            <div class="corner-decoration corner-br"></div>
           </div>
         </div>
 
@@ -338,7 +369,7 @@ const closeWinModal = () => {
   color: rgba(255, 255, 255, 0.95);
   font-weight: 400;
   margin: 0 auto;
-  max-width: 600px;
+  max-width: 550px;
   line-height: 1.6;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
@@ -363,52 +394,357 @@ const closeWinModal = () => {
   position: relative;
 }
 
-/* Wheel Container */
+/* Enhanced Wheel Container */
 .wheel-container {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  width: 550px;
+  height: 550px;
+  margin: 0 auto;
 }
 
+/* Outer Decorative Ring */
+.wheel-outer-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.ring-decoration {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid;
+  animation: ringRotate 20s linear infinite;
+}
+
+.ring-1 {
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  border-color: rgba(255, 215, 0, 0.4);
+  border-style: dashed;
+  animation-duration: 30s;
+}
+
+.ring-2 {
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  border-color: rgba(122, 77, 246, 0.3);
+  border-style: dotted;
+  animation-duration: 25s;
+  animation-direction: reverse;
+}
+
+.ring-3 {
+  top: 30px;
+  left: 30px;
+  right: 30px;
+  bottom: 30px;
+  border-color: rgba(255, 255, 255, 0.2);
+  border-style: solid;
+  animation-duration: 35s;
+}
+
+/* Wheel Frame Layers */
+.wheel-frame-layers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.frame-layer {
+  position: absolute;
+  border-radius: 50%;
+  border: 3px solid;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.frame-outer {
+  top: 40px;
+  left: 40px;
+  right: 40px;
+  bottom: 40px;
+  border-color: #d4af37;
+  background: linear-gradient(45deg, 
+    rgba(212, 175, 55, 0.1) 0%, 
+    rgba(255, 215, 0, 0.05) 50%, 
+    rgba(212, 175, 55, 0.1) 100%);
+  box-shadow: 
+    0 0 30px rgba(212, 175, 55, 0.5),
+    inset 0 0 20px rgba(0, 0, 0, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+}
+
+.frame-middle {
+  top: 50px;
+  left: 50px;
+  right: 50px;
+  bottom: 50px;
+  border-color: #7a4df6;
+  background: linear-gradient(135deg, 
+    rgba(122, 77, 246, 0.1) 0%, 
+    rgba(157, 111, 255, 0.05) 50%, 
+    rgba(122, 77, 246, 0.1) 100%);
+  box-shadow: 
+    0 0 20px rgba(122, 77, 246, 0.4),
+    inset 0 0 15px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.frame-inner {
+  top: 60px;
+  left: 60px;
+  right: 60px;
+  bottom: 60px;
+  border-color: rgba(255, 255, 255, 0.6);
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.05) 0%, 
+    rgba(255, 255, 255, 0.1) 50%, 
+    rgba(255, 255, 255, 0.05) 100%);
+  box-shadow: 
+    0 0 15px rgba(255, 255, 255, 0.3),
+    inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced Wheel Wrapper */
 .wheel-wrapper {
   position: relative;
-  z-index: 3;
-  transition: all 0.3s ease;
-  filter: drop-shadow(0 0 30px rgba(122, 77, 246, 0.6));
+  z-index: 5;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 0 40px rgba(122, 77, 246, 0.7));
 }
 
 .wheel-wrapper::before {
   content: '';
   position: absolute;
-  top: -20px;
-  left: -20px;
-  right: -20px;
-  bottom: -20px;
-  background: radial-gradient(circle, rgba(122, 77, 246, 0.3) 0%, transparent 70%);
+  top: -30px;
+  left: -30px;
+  right: -30px;
+  bottom: -30px;
+  background: radial-gradient(circle, 
+    rgba(122, 77, 246, 0.4) 0%, 
+    rgba(255, 215, 0, 0.2) 30%,
+    rgba(122, 77, 246, 0.1) 60%,
+    transparent 80%);
   border-radius: 50%;
   z-index: -1;
   animation: wheelGlow 3s ease-in-out infinite alternate;
 }
 
+/* Wheel Shadow Base */
+.wheel-shadow-base {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  background: radial-gradient(circle, 
+    rgba(0, 0, 0, 0.4) 0%, 
+    rgba(0, 0, 0, 0.2) 50%, 
+    transparent 80%);
+  border-radius: 50%;
+  z-index: 1;
+  filter: blur(8px);
+}
+
+/* Main Wheel */
+.wheel-main {
+  position: relative;
+  z-index: 3;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 
+    0 0 50px rgba(122, 77, 246, 0.6),
+    0 10px 30px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.1),
+    inset 0 0 0 6px rgba(212, 175, 55, 0.3);
+}
+
+/* Wheel Highlight Overlay */
+.wheel-highlight-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.3) 0%, 
+    transparent 30%, 
+    transparent 70%, 
+    rgba(255, 255, 255, 0.1) 100%);
+  border-radius: 50%;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* Corner Decorations */
+.corner-decorations {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.corner-decoration {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #d4af37;
+  background: linear-gradient(45deg, 
+    rgba(212, 175, 55, 0.3) 0%, 
+    rgba(255, 215, 0, 0.2) 100%);
+  box-shadow: 
+    0 0 15px rgba(212, 175, 55, 0.5),
+    inset 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.corner-tl {
+  top: 20px;
+  left: 20px;
+  border-radius: 0 0 20px 0;
+  transform: rotate(-45deg);
+}
+
+.corner-tr {
+  top: 20px;
+  right: 20px;
+  border-radius: 0 0 0 20px;
+  transform: rotate(45deg);
+}
+
+.corner-bl {
+  bottom: 20px;
+  left: 20px;
+  border-radius: 0 20px 0 0;
+  transform: rotate(45deg);
+}
+
+.corner-br {
+  bottom: 20px;
+  right: 20px;
+  border-radius: 20px 0 0 0;
+  transform: rotate(-45deg);
+}
+
+/* Enhanced Hover and Spinning Effects */
 .wheel-wrapper:hover {
-  transform: scale(1.02);
-  filter: drop-shadow(0 0 50px rgba(122, 77, 246, 0.8));
+  transform: scale(1.03);
+  filter: drop-shadow(0 0 60px rgba(122, 77, 246, 0.9));
+}
+
+.wheel-wrapper:hover .wheel-main {
+  box-shadow: 
+    0 0 70px rgba(122, 77, 246, 0.8),
+    0 15px 40px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.2),
+    inset 0 0 0 6px rgba(212, 175, 55, 0.4);
 }
 
 .wheel-wrapper.spinning {
-  filter: drop-shadow(0 0 60px rgba(255, 215, 0, 0.8));
+  filter: drop-shadow(0 0 80px rgba(255, 215, 0, 0.9));
+}
+
+.wheel-wrapper.spinning .wheel-main {
+  box-shadow: 
+    0 0 100px rgba(255, 215, 0, 0.8),
+    0 20px 50px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.3),
+    inset 0 0 0 6px rgba(255, 215, 0, 0.5);
+}
+
+.wheel-wrapper.spinning .wheel-highlight-overlay {
+  animation: highlightSpin 1s ease-in-out infinite;
+}
+
+.wheel-wrapper.spinning .corner-decoration {
+  animation: cornerPulse 0.5s ease-in-out infinite alternate;
 }
 
 @keyframes wheelGlow {
-  0% { opacity: 0.6; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1.1); }
+  0% { 
+    opacity: 0.6; 
+    transform: scale(1);
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05);
+    filter: hue-rotate(180deg);
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1.1);
+    filter: hue-rotate(360deg);
+  }
 }
 
 @keyframes wheelSpin {
   0% { transform: rotate(0deg) scale(1); }
   50% { transform: rotate(1800deg) scale(1.05); }
   100% { transform: rotate(3600deg) scale(1); }
+}
+
+@keyframes ringRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes highlightSpin {
+  0% { 
+    transform: rotate(0deg);
+    opacity: 0.8;
+  }
+  50% {
+    transform: rotate(180deg);
+    opacity: 1;
+  }
+  100% { 
+    transform: rotate(360deg);
+    opacity: 0.8;
+  }
+}
+
+@keyframes cornerPulse {
+  0% { 
+    transform: scale(1) rotate(-45deg);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+  }
+  100% { 
+    transform: scale(1.2) rotate(-45deg);
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.8);
+  }
+}
+
+@keyframes frameGlow {
+  0% {
+    box-shadow: 
+      0 0 30px rgba(212, 175, 55, 0.5),
+      inset 0 0 20px rgba(0, 0, 0, 0.3);
+  }
+  100% {
+    box-shadow: 
+      0 0 50px rgba(212, 175, 55, 0.8),
+      inset 0 0 30px rgba(0, 0, 0, 0.4);
+  }
 }
 
 /* Simple Spin Button */
@@ -561,6 +897,16 @@ const closeWinModal = () => {
   .main-game-area {
     order: 1;
   }
+  
+  .wheel-container {
+    width: 500px;
+    height: 500px;
+  }
+  
+  .corner-decoration {
+    width: 35px;
+    height: 35px;
+  }
 }
 
 @media (max-width: 1200px) {
@@ -579,7 +925,7 @@ const closeWinModal = () => {
 
 @media (max-width: 768px) {
   .game-layout {
-    padding: 60px 15px 15px 15px;
+    padding: 90px 20px 10px 20px;
     gap: 20px;
   }
   
@@ -612,13 +958,62 @@ const closeWinModal = () => {
   }
   
   .wheel-container {
+    width: 400px;
+    height: 400px;
     margin-bottom: 20px;
+  }
+  
+  .frame-outer {
+    top: 30px;
+    left: 30px;
+    right: 30px;
+    bottom: 30px;
+  }
+  
+  .frame-middle {
+    top: 40px;
+    left: 40px;
+    right: 40px;
+    bottom: 40px;
+  }
+  
+  .frame-inner {
+    top: 50px;
+    left: 50px;
+    right: 50px;
+    bottom: 50px;
+  }
+  
+  .corner-decoration {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .ring-1 {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+  }
+  
+  .ring-2 {
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    bottom: 15px;
+  }
+  
+  .ring-3 {
+    top: 22px;
+    left: 22px;
+    right: 22px;
+    bottom: 22px;
   }
 }
 
 @media (max-width: 480px) {
   .game-layout {
-    padding: 50px 10px 10px 10px;
+    padding: 90px 20px 10px 20px;
     gap: 15px;
   }
   
@@ -658,6 +1053,57 @@ const closeWinModal = () => {
   .counter-label {
     font-size: 13px;
   }
+  
+  .wheel-container {
+    width: 350px;
+    height: 350px;
+  }
+  
+  .frame-outer {
+    top: 25px;
+    left: 25px;
+    right: 25px;
+    bottom: 25px;
+    border-width: 2px;
+  }
+  
+  .frame-middle {
+    top: 35px;
+    left: 35px;
+    right: 35px;
+    bottom: 35px;
+    border-width: 2px;
+  }
+  
+  .frame-inner {
+    top: 45px;
+    left: 45px;
+    right: 45px;
+    bottom: 45px;
+    border-width: 1px;
+  }
+  
+  .corner-decoration {
+    width: 25px;
+    height: 25px;
+    border-width: 1px;
+  }
+  
+  .corner-tl, .corner-tr {
+    top: 15px;
+  }
+  
+  .corner-bl, .corner-br {
+    bottom: 15px;
+  }
+  
+  .corner-tl, .corner-bl {
+    left: 15px;
+  }
+  
+  .corner-tr, .corner-br {
+    right: 15px;
+  }
 }
 
 @media (max-width: 360px) {
@@ -674,6 +1120,57 @@ const closeWinModal = () => {
     font-size: 14px;
     min-height: 48px;
     min-width: 120px;
+  }
+  
+  .wheel-container {
+    width: 300px;
+    height: 300px;
+  }
+  
+  .frame-outer {
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+  }
+  
+  .frame-middle {
+    top: 30px;
+    left: 30px;
+    right: 30px;
+    bottom: 30px;
+  }
+  
+  .frame-inner {
+    top: 40px;
+    left: 40px;
+    right: 40px;
+    bottom: 40px;
+  }
+  
+  .corner-decoration {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .corner-tl, .corner-tr {
+    top: 12px;
+  }
+  
+  .corner-bl, .corner-br {
+    bottom: 12px;
+  }
+  
+  .corner-tl, .corner-bl {
+    left: 12px;
+  }
+  
+  .corner-tr, .corner-br {
+    right: 12px;
+  }
+  
+  .ring-decoration {
+    border-width: 1px;
   }
 }
 </style>
