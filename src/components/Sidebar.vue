@@ -1,104 +1,153 @@
 <template>
-  <!-- 显式指定 enter/leave 的类名：
-       - leave 使用 prev 状态的类名（确保先把“当前版本”正确收回）
-       - enter 使用 next 状态的类名（再让“目标版本”从左边顺滑弹出） -->
-  <Transition
-    mode="out-in"
-    :enter-active-class="`${enterName}-enter-active`"
-    :enter-from-class="`${enterName}-enter-from`"
-    :enter-to-class="`${enterName}-enter-to`"
-    :leave-active-class="`${leaveName}-leave-active`"
-    :leave-from-class="`${leaveName}-leave-from`"
-    :leave-to-class="`${leaveName}-leave-to`"
-    @after-leave="handleAfterLeave"
-  >
-    <!-- 展开版 -->
-    <nav
-      v-if="sidebar.isOpen"
-      key="expanded"
-      id="navigation-widget"
-      class="navigation-widget navigation-widget-desktop sidebar left"
+  <!-- 舞台容器：控制宽度 & 裁剪 & 提供相对定位 -->
+  <div class="sidebar-stage" :style="stageStyle" aria-hidden="false">
+    <Transition
+      :enter-active-class="`${enterName}-enter-active`"
+      :enter-from-class="`${enterName}-enter-from`"
+      :enter-to-class="`${enterName}-enter-to`"
+      :leave-active-class="`${leaveName}-leave-active`"
+      :leave-from-class="`${leaveName}-leave-from`"
+      :leave-to-class="`${leaveName}-leave-to`"
+      @after-leave="prevIsOpen = sidebar.isOpen"
     >
-      <figure class="navigation-widget-cover liquid">
-        <img src="@/assets/img/cover/01.jpg" alt="cover-01" />
-      </figure>
+      <!-- 桌面展开 -->
+      <nav
+        v-if="!isMobile && sidebar.isOpen"
+        key="desktop"
+        class="navigation-widget navigation-widget-desktop sidebar left"
+      >
+        <figure class="navigation-widget-cover liquid">
+          <img src="@/assets/img/cover/01.jpg" alt="cover-01" />
+        </figure>
 
-      <div class="user-short-description">
-        <RouterLink class="user-short-description-avatar" to="/profile">
-          <HexAvatar :avatar="avatarSrc" :progress="80" />
+        <div class="user-short-description">
+          <RouterLink class="user-short-description-avatar" to="/profile">
+            <HexAvatar :avatar="avatarSrc" :progress="80" />
+          </RouterLink>
+          <p class="user-short-description-title">
+            <RouterLink to="/profile">Marina Valentine</RouterLink>
+          </p>
+          <p class="user-short-description-text">
+            <a href="#">www.gamehuntress.com</a>
+          </p>
+        </div>
+
+        <ul class="menu">
+          <li
+            v-for="item in menuItems"
+            :key="item.title"
+            class="menu-item"
+            :class="{ active: route.path === item.path }"
+          >
+            <RouterLink class="menu-item-link" :to="item.path">
+              <svg class="menu-item-link-icon" :class="`icon-${item.icon}`">
+                <use :xlink:href="`#svg-${item.icon}`"></use>
+              </svg>
+              {{ item.title }}
+            </RouterLink>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- 桌面迷你 -->
+      <nav
+        v-else-if="!isMobile && !sidebar.isOpen"
+        key="mini"
+        class="navigation-widget navigation-widget-desktop closed sidebar left delayed"
+      >
+        <RouterLink class="user-avatar small no-outline online" to="/profile">
+          <HexAvatar class="hex-avatar-sm" :avatar="avatarSrc" :progress="80" />
         </RouterLink>
-        <p class="user-short-description-title">
-          <RouterLink to="/profile">Marina Valentine</RouterLink>
-        </p>
-        <p class="user-short-description-text">
-          <a href="#">www.gamehuntress.com</a>
-        </p>
-      </div>
 
-      <ul class="menu">
-        <li
-          v-for="item in menuItems"
-          :key="item.title"
-          class="menu-item"
-          :class="{ active: route.path === item.path }"
-        >
-          <RouterLink class="menu-item-link" :to="item.path">
-            <svg class="menu-item-link-icon" :class="`icon-${item.icon}`">
-              <use :xlink:href="`#svg-${item.icon}`"></use>
-            </svg>
-            {{ item.title }}
+        <ul class="menu small">
+          <li
+            v-for="item in menuItems"
+            :key="item.title"
+            class="menu-item"
+            :class="{ active: route.path === item.path }"
+          >
+            <RouterLink class="menu-item-link text-tooltip-tfr" :to="item.path" :data-title="item.title">
+              <svg class="menu-item-link-icon" :class="`icon-${item.icon}`">
+                <use :xlink:href="`#svg-${item.icon}`"></use>
+              </svg>
+            </RouterLink>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- 手机版（添加了用户信息） -->
+      <nav
+        v-else
+        key="mobile"
+        class="navigation-widget navigation-widget-mobile sidebar left"
+      >
+        <figure class="navigation-widget-cover liquid">
+          <img src="@/assets/img/cover/01.jpg" alt="cover-01" />
+        </figure>
+
+        <div class="user-short-description">
+          <RouterLink class="user-short-description-avatar" to="/profile">
+            <HexAvatar :avatar="avatarSrc" :progress="80" />
           </RouterLink>
-        </li>
-      </ul>
-    </nav>
+          <p class="user-short-description-title">
+            <RouterLink to="/profile">Marina Valentine</RouterLink>
+          </p>
+          <p class="user-short-description-text">
+            <a href="#">www.gamehuntress.com</a>
+          </p>
+        </div>
 
-    <!-- 收起版 / mini -->
-    <nav
-      v-else
-      key="mini"
-      id="navigation-widget-small"
-      class="navigation-widget navigation-widget-desktop closed sidebar left delayed"
-    >
-      <RouterLink class="user-avatar small no-outline online" to="/profile">
-        <HexAvatar class="hex-avatar-sm" :avatar="avatarSrc" :progress="80" />
-      </RouterLink>
-
-      <ul class="menu small">
-        <li
-          v-for="item in menuItems"
-          :key="item.title"
-          class="menu-item"
-          :class="{ active: route.path === item.path }"
-        >
-          <RouterLink class="menu-item-link text-tooltip-tfr" :to="item.path" :data-title="item.title">
-            <svg class="menu-item-link-icon" :class="`icon-${item.icon}`">
-              <use :xlink:href="`#svg-${item.icon}`"></use>
-            </svg>
-          </RouterLink>
-        </li>
-      </ul>
-    </nav>
-  </Transition>
+        <ul class="menu">
+          <li
+            v-for="item in menuItems"
+            :key="item.title"
+            class="menu-item"
+            :class="{ active: route.path === item.path }"
+          >
+            <RouterLink class="menu-item-link" :to="item.path">
+              <svg class="menu-item-link-icon" :class="`icon-${item.icon}`">
+                <use :xlink:href="`#svg-${item.icon}`"></use>
+              </svg>
+              {{ item.title }}
+            </RouterLink>
+          </li>
+        </ul>
+      </nav>
+    </Transition>
+  </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { useSidebarStore } from '@/stores/sidebar'
 import HexAvatar from '@/components/HexAvatar.vue'
-const avatarSrc = new URL('@/assets/img/avatar/29.jpg', import.meta.url).href
 
+const avatarSrc = new URL('@/assets/img/avatar/29.jpg', import.meta.url).href
 const route = useRoute()
 const sidebar = useSidebarStore()
 
-// 跟踪上一次的展开状态：用于决定离场动画的类名
+// —— 尺寸（可按你的实际样式微调）——
+const W_DESKTOP = 300  // 展开宽度（px）
+const W_MINI    = 92   // 迷你宽度（px）
+const W_MOBILE  = 280  // 手机版抽屉宽度（px）
+
+// 判定手机版
+const isMobile = ref(window.innerWidth < 768)
+const onResize = () => (isMobile.value = window.innerWidth < 768)
+onMounted(() => window.addEventListener('resize', onResize))
+onBeforeUnmount(() => window.removeEventListener('resize', onResize))
+
+// 舞台容器宽度（保证"从旁边来/收进去"的观感 & 避免内容跳动）
+const stageStyle = computed(() => {
+  const w = isMobile.value ? W_MOBILE : (sidebar.isOpen ? W_DESKTOP : W_MINI)
+  return { '--stage-w': `${w}px`, width: `${w}px` }
+})
+
+// 动画类名（用于决定走 expand 还是 mini 的轨道）
 const prevIsOpen = ref(sidebar.isOpen)
 const enterName = computed(() => (sidebar.isOpen ? 'expand' : 'mini'))
 const leaveName = computed(() => (prevIsOpen.value ? 'expand' : 'mini'))
-function handleAfterLeave() {
-  // 离场动画结束后再同步 prev 状态，确保 leave 使用的是“旧版”类名
-  prevIsOpen.value = sidebar.isOpen
-}
 
 const menuItems = [
   { title: 'Wheel', path: '/wheel', icon: 'newsfeed' },
@@ -109,79 +158,76 @@ const menuItems = [
 </script>
 
 <style scoped>
+/* 选中态保持你的主题色 */
 :deep(.menu-item.active) .menu-item-link {
   color: var(--color-primary, #4f46e5);
 }
 
-/* 提前告诉浏览器将要做的变化，减少抖动 */
-.navigation-widget {
-  will-change: transform, opacity;
+/* 舞台容器：关键！提供裁剪&定位&宽度过渡，从而"从侧边推入/收回" */
+.sidebar-stage{
+  position: relative;
+  overflow: hidden;
+  width: var(--stage-w, 300px);
+  transition: width 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* 可选：锁高以避免布局抖动（如果你的父级不是全高，可以删掉） */
+  min-height: 100%;
 }
 
-/* expand：用于展开版的进/出场（避免 mini 突然放大） */
-.expand-enter-active {
-  transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1), opacity 280ms ease-out;
-}
-.expand-enter-from {
-  opacity: 0;
-  transform: translateX(-16px); /* 不放大，仅从左入场 */
-}
-.expand-enter-to {
-  opacity: 1;
-  transform: translateX(0);
-}
-.expand-leave-active {
-  /* 与 aside 宽度过渡时长对齐，确保先完全“收进去” */
-  transition: transform 360ms cubic-bezier(0.4, 0, 0.2, 1), opacity 240ms ease;
-}
-.expand-leave-from {
-  opacity: 1;
-  transform: translateX(0) scale(1);
-}
-.expand-leave-to {
-  opacity: 0;
-  transform: translateX(-16px) scale(0.96); /* 轻微缩回到左侧 */
+/* 让侧栏宽度贴合舞台，避免外部样式影响 */
+.navigation-widget{
+  will-change: transform;
 }
 
-/* mini：用于 mini 版的进/出场（进入时不再 scale 放大） */
-.mini-enter-active {
-  transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1), opacity 260ms ease-out;
-}
-.mini-enter-from {
-  opacity: 0;
-  transform: translateX(-16px); /* 从左滑入，无 scale */
-}
-.mini-enter-to {
-  opacity: 1;
-  transform: translateX(0);
-}
-.mini-leave-active {
-  /* 与 aside 宽度过渡时长对齐，确保先完全“收进去” */
-  transition: transform 360ms cubic-bezier(0.4, 0, 0.2, 1), opacity 220ms ease;
-}
-.mini-leave-from {
-  opacity: 1;
-  transform: translateX(0);
-}
-.mini-leave-to {
-  opacity: 0;
-  transform: translateX(-14px) scale(0.98); /* 轻微收回 */
+/* ========= 核心动画：交叠滑动（修复全屏问题） ========= */
+/* 进入/离开期间设为绝对定位，但限制在舞台容器内 */
+.expand-enter-active,
+.expand-leave-active,
+.mini-enter-active,
+.mini-leave-active{
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
 
-/* 缩小版头像用于收起侧栏 */
+/* 进场：从左侧舞台外进入（-100%） */
+.expand-enter-from,
+.mini-enter-from{
+  transform: translateX(-100%);
+}
+.expand-enter-to,
+.mini-enter-to{
+  transform: translateX(0);
+}
+
+/* 离场：向左滑出舞台（-100%） */
+.expand-leave-from,
+.mini-leave-from{
+  transform: translateX(0);
+}
+.expand-leave-to,
+.mini-leave-to{
+  transform: translateX(-100%);
+}
+
+/* 缩小头像维持你的比例 */
 .hex-avatar-sm {
   transform: scale(0.38);
   transform-origin: top left;
-  width: 124px; /* 保持尺寸基准，缩放后约 47px 宽 */
-  height: 136px; /* 缩放后约 52px 高 */
+  width: 124px;
+  height: 136px;
 }
 
-/* 降低动画偏好时，缩短或移除动画 */
+/* 降低动画偏好 */
 @media (prefers-reduced-motion: reduce) {
+  .sidebar-stage{ transition-duration: 1ms !important; }
   .expand-enter-active,
   .expand-leave-active,
   .mini-enter-active,
-  .mini-leave-active {
+  .mini-leave-active{
     transition-duration: 1ms !important;
   }
 }
