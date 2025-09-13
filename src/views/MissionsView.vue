@@ -277,7 +277,7 @@ const topQuests = computed(() =>
   quests.value
     .filter(q => q.status === "in-progress")
     .sort((a, b) => b.percent - a.percent)
-    .slice(0, 4)
+    .slice(0, 3)
 )
 
 const sortedQuests = computed(() =>
