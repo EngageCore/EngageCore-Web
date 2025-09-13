@@ -10,24 +10,14 @@
 
         <h1 class="header-brand-text">Engage Core</h1>
       </div>
-    </div>
 
-    <div class="header-actions">
-      <div class="mobilemenu-trigger navigation-widget-mobile-trigger">
-        <div class="burger-icon inverted">
-          <div class="burger-icon-bar"></div>
-          <div class="burger-icon-bar"></div>
-          <div class="burger-icon-bar"></div>
-        </div>
+      <div class="sidemenu-trigger navigation-widget-trigger ms-2" @click="sidebar.toggle()">
+        <!-- ICON GRID -->
+        <svg class="icon-grid">
+          <use xlink:href="#svg-grid"></use>
+        </svg>
+        <!-- /ICON GRID -->
       </div>
-
-      <nav class="navigation">
-        <ul class="menu-main">
-          <li class="menu-main-item" v-for="item in menuItem" :key="item.path">
-            <a class="menu-main-item-link" href="#" @click.prevent="redirect(item.path)">{{ item.name }}</a>
-          </li>
-        </ul>
-      </nav>
     </div>
 
     <div class="header-actions">
@@ -44,6 +34,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useSidebarStore } from '@/stores/sidebar'
 
 const isDark = ref(false)
 const menuItem = ref([
@@ -57,4 +48,36 @@ const router = useRouter()
 const redirect = (name) => {
   router.push({ name })
 }
+
+const sidebar = useSidebarStore()
 </script>
+
+<style scoped>
+.sidebar-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.06);
+  cursor: pointer;
+  margin-right: 12px;
+}
+
+.sidebar-toggle-btn:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+.sidebar-toggle-btn .burger-icon {
+  display: inline-grid;
+  gap: 4px;
+}
+.sidebar-toggle-btn .burger-icon span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: currentColor;
+}
+</style>
