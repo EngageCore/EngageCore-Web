@@ -11,7 +11,7 @@
         <h1 class="header-brand-text">Engage Core</h1>
       </div>
 
-      <div class="sidemenu-trigger navigation-widget-trigger ms-2" @click="sidebar.toggle()">
+      <div class="sidemenu-trigger navigation-widget-trigger" @click="sidebar.toggle()">
         <!-- ICON GRID -->
         <svg class="icon-grid">
           <use xlink:href="#svg-grid"></use>
