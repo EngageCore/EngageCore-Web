@@ -37,19 +37,19 @@
       <!-- MOBILEMENU TRIGGER -->
       <div class="mobilemenu-trigger navigation-widget-mobile-trigger" @click="toggleMobileMenu">
         <!-- BURGER ICON -->
-        <div class="burger-icon inverted">
+        <!-- <div class="burger-icon inverted"> -->
           <!-- BURGER ICON BAR -->
-          <div class="burger-icon-bar"></div>
+          <!-- <div class="burger-icon-bar"></div> -->
           <!-- /BURGER ICON BAR -->
 
           <!-- BURGER ICON BAR -->
-          <div class="burger-icon-bar"></div>
+          <!-- <div class="burger-icon-bar"></div> -->
           <!-- /BURGER ICON BAR -->
 
           <!-- BURGER ICON BAR -->
-          <div class="burger-icon-bar"></div>
+          <!-- <div class="burger-icon-bar"></div> -->
           <!-- /BURGER ICON BAR -->
-        </div>
+        <!-- </div> -->
         <!-- /BURGER ICON -->
       </div>
       <!-- /MOBILEMENU TRIGGER -->
