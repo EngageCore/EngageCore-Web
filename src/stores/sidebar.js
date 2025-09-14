@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 export const useSidebarStore = defineStore('sidebar', {
   state: () => ({
     // true: 展开（显示大侧栏），false: 收起（显示小侧栏）
-    isOpen: true,
+    isOpen: false,
   }),
   actions: {
     open() { this.isOpen = true },

@@ -2697,7 +2697,10 @@ figure>img {
 
 .text-sticker.void {
     box-shadow: none;
-    background-color: transparent
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+    width: 80px;
 }
 
 .date-sticker {
@@ -13674,11 +13677,11 @@ figure>img {
     padding: 0 26px
 }
 
-@media screen and (max-width:1500px) {
+/* @media screen and (max-width:1500px) {
     .header .header-brand .header-brand-text {
         display: none
     }
-}
+} */
 
 @media screen and (max-width:1365px) {
     .header.logged-out .header-actions .mobilemenu-trigger {
@@ -13749,9 +13752,9 @@ figure>img {
         margin-left: 16px
     }
 
-    .header .header-actions .sidemenu-trigger {
+    /* .header .header-actions .sidemenu-trigger {
         display: none
-    }
+    } */
 
     .floaty-bar,
     .header .header-actions .mobilemenu-trigger {
@@ -14066,7 +14069,8 @@ figure>img {
 
 .sidebar.navigation-widget.navigation-widget-mobile {
     margin-top: 0;
-    z-index: 100000
+    z-index: 100000;
+    width: 320px;
 }
 
 .sidebar.navigation-widget.closed {

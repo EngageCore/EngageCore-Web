@@ -307,6 +307,7 @@ const closeWinModal = () => {
   text-align: center;
   margin-bottom: 20px;
   position: relative;
+  margin-top: 30px;
 }
 
 .header-controls {
