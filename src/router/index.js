@@ -48,7 +48,11 @@ const routes = [
 // 创建路由实例
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    // Always scroll to top when switching pages
+    return { top: 0 }
+  }
 })
 
 // No authentication guards needed
