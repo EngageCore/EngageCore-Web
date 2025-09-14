@@ -58,3 +58,24 @@
 button:focus {
   outline: none;
 }
+
+/* ========== Layout Fixes for Sidebar / Content Grid ========== */
+/* 防止任何脚本对内容栅格施加 translate 引起偏移 */
+.content-grid {
+  margin-left: auto;
+  margin-right: auto;
+  transform: none !important;
+}
+
+/* 当桌面宽度下，保持与原模板一致的左右内边距 */
+@media screen and (min-width: 1366px) {
+  .content-grid {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* 小屏使用模板原有宽度设置，这里仅确保不被 translate 干扰 */
+@media screen and (max-width: 1365px) {
+  .content-grid { transform: none !important; }
+}
