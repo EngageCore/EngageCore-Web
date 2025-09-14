@@ -38,17 +38,17 @@
       <div class="mobilemenu-trigger navigation-widget-mobile-trigger" @click="toggleMobileMenu">
         <!-- BURGER ICON -->
         <!-- <div class="burger-icon inverted"> -->
-          <!-- BURGER ICON BAR -->
-          <!-- <div class="burger-icon-bar"></div> -->
-          <!-- /BURGER ICON BAR -->
+        <!-- BURGER ICON BAR -->
+        <!-- <div class="burger-icon-bar"></div> -->
+        <!-- /BURGER ICON BAR -->
 
-          <!-- BURGER ICON BAR -->
-          <!-- <div class="burger-icon-bar"></div> -->
-          <!-- /BURGER ICON BAR -->
+        <!-- BURGER ICON BAR -->
+        <!-- <div class="burger-icon-bar"></div> -->
+        <!-- /BURGER ICON BAR -->
 
-          <!-- BURGER ICON BAR -->
-          <!-- <div class="burger-icon-bar"></div> -->
-          <!-- /BURGER ICON BAR -->
+        <!-- BURGER ICON BAR -->
+        <!-- <div class="burger-icon-bar"></div> -->
+        <!-- /BURGER ICON BAR -->
         <!-- </div> -->
         <!-- /BURGER ICON -->
       </div>
@@ -78,129 +78,13 @@
 
     <!-- HEADER ACTIONS -->
     <div class="header-actions search-bar">
-      <!-- INTERACTIVE INPUT -->
-      <div class="interactive-input dark">
-        <input type="text" id="search-main" name="search_main" placeholder="Search here for people or groups" disabled>
-        <!-- INTERACTIVE INPUT ICON WRAP -->
-        <div class="interactive-input-icon-wrap">
-          <!-- INTERACTIVE INPUT ICON -->
-          <svg class="interactive-input-icon icon-magnifying-glass">
-            <use xlink:href="#svg-magnifying-glass"></use>
-          </svg>
-          <!-- /INTERACTIVE INPUT ICON -->
-        </div>
-        <!-- /INTERACTIVE INPUT ICON WRAP -->
-      </div>
-      <!-- /INTERACTIVE INPUT -->
+
     </div>
     <!-- /HEADER ACTIONS -->
 
     <!-- HEADER ACTIONS -->
-     <div class="header-actions">
-       <!-- ACTION LIST -->
-       <div class="action-list dark">
-         <!-- ACTION LIST ITEM WRAP -->
-        <div class="action-list-item-wrap" style="position: relative;">
-          <!-- ACTION LIST ITEM -->
-          <div class="action-list-item unread header-dropdown-trigger" @click="toggleNotificationsDropdown">
-            <!-- ACTION LIST ITEM ICON -->
-            <svg class="action-list-item-icon icon-notification">
-              <use xlink:href="#svg-notification"></use>
-            </svg>
-            <!-- /ACTION LIST ITEM ICON -->
-          </div>
-          <!-- /ACTION LIST ITEM -->
+    <div class="header-actions">
 
-          <!-- DROPDOWN BOX -->
-          <div class="dropdown-box header-dropdown" :style="{
-            position: 'absolute',
-            zIndex: 9999,
-            top: '64px',
-            right: '6px',
-            opacity: showNotificationsDropdown ? 1 : 0,
-            visibility: showNotificationsDropdown ? 'visible' : 'hidden',
-            transform: showNotificationsDropdown ? 'translate(0px, 0px)' : 'translate(0px, -40px)',
-            transition: 'transform 0.4s ease-in-out, opacity 0.4s ease-in-out, visibility 0.4s ease-in-out'
-          }">
-            <!-- DROPDOWN BOX HEADER -->
-            <div class="dropdown-box-header">
-              <!-- DROPDOWN BOX HEADER TITLE -->
-              <p class="dropdown-box-header-title">Notifications</p>
-              <!-- /DROPDOWN BOX HEADER TITLE -->
-
-              <!-- DROPDOWN BOX HEADER ACTIONS -->
-              <div class="dropdown-box-header-actions">
-                <!-- DROPDOWN BOX HEADER ACTION -->
-                <p class="dropdown-box-header-action" @click="markAllAsRead">Mark all as Read</p>
-                <!-- /DROPDOWN BOX HEADER ACTION -->
-
-                <!-- DROPDOWN BOX HEADER ACTION -->
-                <p class="dropdown-box-header-action">Settings</p>
-                <!-- /DROPDOWN BOX HEADER ACTION -->
-              </div>
-              <!-- /DROPDOWN BOX HEADER ACTIONS -->
-            </div>
-            <!-- /DROPDOWN BOX HEADER -->
-
-            <!-- DROPDOWN BOX LIST -->
-            <div class="dropdown-box-list">
-              <!-- DROPDOWN BOX LIST ITEM -->
-              <div class="dropdown-box-list-item" :class="{ unread: notification.unread }"
-                v-for="notification in notifications || []" :key="notification.id">
-                <!-- USER STATUS -->
-                <div class="user-status notification">
-                  <!-- USER STATUS AVATAR -->
-                  <div class="user-status-avatar">
-                    <!-- USER AVATAR -->
-                    <div class="user-avatar small no-outline">
-                      <!-- USER AVATAR CONTENT -->
-                      <div class="user-avatar-content">
-                        <!-- HEXAGON -->
-                        <div class="hexagon-image-30-32" :data-src="notification.avatar"
-                          style="width: 30px; height: 32px; position: relative;">
-                          <canvas width="30" height="32" style="position: absolute; top: 0px; left: 0px;"></canvas>
-                        </div>
-                        <!-- /HEXAGON -->
-                      </div>
-                      <!-- /USER AVATAR CONTENT -->
-                    </div>
-                    <!-- /USER AVATAR -->
-                  </div>
-                  <!-- /USER STATUS AVATAR -->
-
-                  <!-- USER STATUS TITLE -->
-                  <p class="user-status-title">{{ notification.title }}</p>
-                  <!-- /USER STATUS TITLE -->
-
-                  <!-- USER STATUS TIMESTAMP -->
-                  <p class="user-status-timestamp">{{ notification.timestamp }}</p>
-                  <!-- /USER STATUS TIMESTAMP -->
-
-                  <!-- USER STATUS ICON -->
-                  <div class="user-status-icon">
-                    <!-- ICON COMMENT -->
-                    <svg class="icon-comment">
-                      <use xlink:href="#svg-comment"></use>
-                    </svg>
-                    <!-- /ICON COMMENT -->
-                  </div>
-                  <!-- /USER STATUS ICON -->
-                </div>
-                <!-- /USER STATUS -->
-              </div>
-              <!-- /DROPDOWN BOX LIST ITEM -->
-            </div>
-            <!-- /DROPDOWN BOX LIST -->
-
-            <!-- DROPDOWN BOX BUTTON -->
-            <a class="dropdown-box-button secondary" href="#">View all Notifications</a>
-            <!-- /DROPDOWN BOX BUTTON -->
-          </div>
-          <!-- /DROPDOWN BOX -->
-        </div>
-        <!-- /ACTION LIST ITEM WRAP -->
-      </div>
-      <!-- /ACTION LIST -->
 
       <!-- ACTION ITEM WRAP -->
       <div class="action-item-wrap" style="position: relative;">

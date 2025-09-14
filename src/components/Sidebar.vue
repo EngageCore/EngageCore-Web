@@ -160,7 +160,7 @@ const leaveName = computed(() => (prevIsOpen.value ? 'expand' : 'mini'))
 
 const menuItems = [
   { title: 'Profile', path: '/profile', icon: 'overview' },
-  { title: 'Wheel', path: '/wheel', icon: 'play' },
+  { title: 'Wheel', path: '/wheel', icon: 'streams' },
   { title: 'Missions', path: '/missions', icon: 'quests' },
   { title: 'History', path: '/history', icon: 'timeline' },
 ]
@@ -359,8 +359,8 @@ const menuItems = [
   100% {
     text-shadow:
       0 0 15px rgba(64, 208, 79, 1),
-    0 0 30px rgba(64, 208, 79, 0.6),
-    0 0 40px rgba(64, 208, 79, 0.3);
+      0 0 30px rgba(64, 208, 79, 0.6),
+      0 0 40px rgba(64, 208, 79, 0.3);
   }
 }
 
