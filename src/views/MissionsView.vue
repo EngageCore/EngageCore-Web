@@ -14,7 +14,8 @@
     </div>
 
     <div class="grid grid-3-3-3-3 centered">
-      <div :class="['quest-item', { completed: quest.completed }]" v-for="(quest, index) in topQuests" :key="quest.title">
+      <div :class="['quest-item', { completed: quest.completed }]" v-for="(quest, index) in topQuests"
+        :key="quest.title">
         <div class="quest-item-cover" :class="`cover-0${index + 1}`"></div>
 
         <p class="text-sticker small-text">
@@ -100,7 +101,7 @@
               <use xlink:href="#svg-small-arrow"></use>
             </svg>
           </div>
-      
+
           <button type="button" class="button secondary">Filter Quests</button>
         </div>
       </form>
@@ -111,26 +112,28 @@
         <div class="table-header-column">
           <p class="table-header-title">Quest</p>
         </div>
-  
+
         <div class="table-header-column">
           <p class="table-header-title">Description</p>
         </div>
-  
+
         <div class="table-header-column centered padded-big-left">
           <p class="table-header-title">Experience</p>
         </div>
-  
+
         <div class="table-header-column padded-big-left">
           <p class="table-header-title">Progress</p>
         </div>
       </div>
-  
+
       <div class="table-body same-color-rows">
-        <div class="table-row small" v-for="quest in sortedQuests">
+        <div class="table-row small" v-for="quest in sortedQuests" :key="quest.title">
           <div class="table-column">
             <div class="table-information">
-              <img class="table-image" v-if="quest.difficulty === 'gold'" src="@/assets/img/quest/completedq-s.png" alt="gold-badge" />
-              <img class="table-image" v-else-if="quest.difficulty === 'silver'" src="@/assets/img/quest/openq-s.png" alt="silver-badge" />   
+              <img class="table-image" v-if="quest.difficulty === 'gold'" src="@/assets/img/quest/completedq-s.png"
+                alt="gold-badge" />
+              <img class="table-image" v-else-if="quest.difficulty === 'silver'" src="@/assets/img/quest/openq-s.png"
+                alt="silver-badge" />
               <p class="table-title">{{ quest.title }}</p>
             </div>
           </div>
@@ -159,9 +162,60 @@
                 </template>
               </p>
             </div>
-            <button v-else-if="quest.status === 'completed-unclaimed'" class="button secondary">Claim Reward</button>
+            <button v-else-if="quest.status === 'completed-unclaimed'" @click="openClaimModal(quest)"
+              class="button secondary">Claim Reward</button>
             <button v-else class="button disabled" disabled>Claimed</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Claim Reward Modal -->
+    <div v-if="showClaimModal" class="modal-overlay" @click="closeClaimModal">
+      <div class="popup-box small claim-modal" @click.stop>
+        <!-- Modal Header -->
+        <div class="popup-box-header">
+          <button class="popup-close-button" @click="closeClaimModal">
+            <svg class="popup-close-button-icon icon-cross">
+              <use xlink:href="#svg-cross"></use>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="popup-box-body">
+          <div class="popup-box-content">
+            <!-- Trophy Icon -->
+            <div class="claim-modal-icon">
+              <img src="@/assets/img/icons/trophy-reward.svg" alt="Trophy" class="trophy-icon" />
+            </div>
+
+            <!-- Quest Info -->
+            <div class="claim-modal-info">
+              <h3 class="popup-box-title">Quest Completed!</h3>
+              <p class="popup-box-subtitle">
+                <span class="light">You have successfully completed:</span>
+              </p>
+              <p class="quest-completed-title">{{ selectedQuest?.title }}</p>
+            </div>
+
+            <!-- Reward Info -->
+            <div class="claim-modal-reward">
+              <div class="reward-badge">
+                <svg class="text-sticker-icon icon-plus-small">
+                  <use xlink:href="#svg-plus-small"></use>
+                </svg>
+                <span class="reward-amount">{{ selectedQuest?.exp }} EXP</span>
+              </div>
+              <p class="reward-text">Experience points have been added to your account!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Actions -->
+        <div class="popup-box-actions">
+          <button class="button secondary popup-box-action" @click="closeClaimModal">Close</button>
+          <button class="button primary popup-box-action" @click="claimReward">Claim Reward</button>
         </div>
       </div>
     </div>
@@ -169,7 +223,60 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { useNotification } from '@/composables/useNotification'
+import { computed, ref } from 'vue'
+
+// Notification system
+const { showSuccess, showError, showWarning, showConfirmation } = useNotification()
+
+// Modal state management
+const showClaimModal = ref(false)
+const selectedQuest = ref(null)
+
+// Modal functions
+const openClaimModal = (quest) => {
+  selectedQuest.value = quest
+  showClaimModal.value = true
+  document.body.style.overflow = 'hidden' // Prevent background scroll
+}
+
+const closeClaimModal = () => {
+  showClaimModal.value = false
+  selectedQuest.value = null
+  document.body.style.overflow = 'auto' // Restore scroll
+}
+
+const claimReward = async () => {
+  if (selectedQuest.value) {
+    try {
+      // Close modal first
+      closeClaimModal()
+
+      // Show processing notification
+      const loadingId = showWarning('Processing...', 'Claiming your reward, please wait.')
+
+      // Simulate API call delay
+      setTimeout(() => {
+        // Update quest status to claimed
+        const questIndex = quests.value.findIndex(q => q.title === selectedQuest.value.title)
+        if (questIndex !== -1) {
+          quests.value[questIndex].status = 'claimed'
+
+          // Show success notification
+          showSuccess(
+            'Reward Claimed!',
+            `You've earned ${selectedQuest.value.exp} EXP for completing "${selectedQuest.value.title}"`
+          )
+        } else {
+          showError('Error', 'Failed to claim reward. Please try again.')
+        }
+      }, 1500)
+    } catch (error) {
+      showError('Error', 'An unexpected error occurred while claiming your reward.')
+      closeClaimModal()
+    }
+  }
+}
 
 const quests = ref([
   {
@@ -299,10 +406,278 @@ const sortedQuests = computed(() =>
 .cover-02 {
   background: url('@/assets/img/quest/cover/02.png') no-repeat center/cover;
 }
+
 .cover-03 {
   background: url('@/assets/img/quest/cover/03.png') no-repeat center/cover;
 }
+
 .cover-04 {
   background: url('@/assets/img/quest/cover/04.png') no-repeat center/cover;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Claim Modal */
+.claim-modal {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: scale(1);
+  animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-width: 480px;
+  width: 90%;
+  background: linear-gradient(135deg, #1d2333 0%, #252b3d 100%);
+  border: 1px solid #3f485f;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+/* Modal Header */
+.popup-box-header {
+  position: relative;
+  padding: 20px 28px 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.popup-close-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.popup-close-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.popup-close-button-icon {
+  width: 16px;
+  height: 16px;
+  fill: #9aa4bf;
+  transition: fill 0.2s ease;
+}
+
+.popup-close-button:hover .popup-close-button-icon {
+  fill: #fff;
+}
+
+/* Modal Content */
+.claim-modal .popup-box-content {
+  text-align: center;
+  padding: 20px 28px;
+  width: 100%;
+}
+
+/* Trophy Icon */
+.claim-modal-icon {
+  margin-bottom: 24px;
+  justify-content: center;
+  display: flex;
+}
+
+.trophy-icon {
+  width: 80px;
+  height: 80px;
+  animation: trophyBounce 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 12px rgba(255, 215, 0, 0.3));
+}
+
+/* Quest Info */
+.claim-modal-info {
+  margin-bottom: 32px;
+}
+
+.claim-modal .popup-box-title {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-align: center;
+  padding: 0;
+}
+
+.claim-modal .popup-box-subtitle {
+  margin-bottom: 16px;
+  text-align: center;
+  padding: 0;
+}
+
+.quest-completed-title {
+  color: #7750f8;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Reward Info */
+.claim-modal-reward {
+  margin-bottom: 24px;
+}
+
+.reward-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #7750f8 0%, #4cd4f7 100%);
+  padding: 12px 24px;
+  border-radius: 25px;
+  margin-bottom: 16px;
+  animation: rewardPulse 2s ease-in-out infinite;
+}
+
+.reward-amount {
+  color: #fff;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.reward-text {
+  color: #9aa4bf;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Modal Actions */
+.claim-modal .popup-box-actions {
+  padding: 24px 28px 32px;
+  gap: 16px;
+}
+
+.claim-modal .popup-box-action {
+  flex: 1;
+  margin-right: 0;
+  transition: all 0.3s ease;
+}
+
+.claim-modal .button.primary {
+  background: linear-gradient(135deg, #7750f8 0%, #4cd4f7 100%);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+}
+
+.claim-modal .button.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(119, 80, 248, 0.4);
+}
+
+.claim-modal .button.secondary:hover {
+  transform: translateY(-2px);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes trophyBounce {
+
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  40% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+
+  60% {
+    transform: translateY(-5px) rotate(-3deg);
+  }
+}
+
+@keyframes rewardPulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(119, 80, 248, 0.3);
+  }
+
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(119, 80, 248, 0.5);
+  }
+}
+
+/* Responsive Design */
+@media screen and (max-width: 680px) {
+  .claim-modal {
+    max-width: 95%;
+    margin: 20px;
+  }
+
+  .claim-modal .popup-box-content {
+    padding: 16px 20px;
+  }
+
+  .claim-modal .popup-box-actions {
+    padding: 20px;
+    flex-direction: column;
+  }
+
+  .claim-modal .popup-box-action {
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  .claim-modal .popup-box-action:last-child {
+    margin-bottom: 0;
+  }
+
+  .trophy-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .claim-modal .popup-box-title {
+    font-size: 1.25rem;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .claim-modal {
+    max-width: 100%;
+  }
 }
 </style>

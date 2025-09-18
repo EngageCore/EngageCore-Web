@@ -4,13 +4,21 @@
   
   <!-- Main App Content -->
   <router-view />
+  
+  <!-- Global Notification Container -->
+  <NotificationContainer />
 </template>
 
 <script setup>
 import { watch } from 'vue'
 import { useRoute } from 'vue-router'
 import PageLoader from './components/PageLoader.vue'
+import NotificationContainer from './components/NotificationContainer.vue'
 import { usePageLoader } from './composables/usePageLoader'
+import { provideNotifications } from './composables/useNotification'
+
+// Provide notifications globally
+provideNotifications()
 
 const route = useRoute()
 const { isLoading, showLoader, hideLoader } = usePageLoader()

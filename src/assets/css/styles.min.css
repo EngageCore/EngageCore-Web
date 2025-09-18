@@ -2700,7 +2700,6 @@ figure>img {
     background-color: transparent;
     display: flex;
     align-items: center;
-    width: 80px;
 }
 
 .date-sticker {
@@ -13751,15 +13750,7 @@ figure>img {
         margin-left: 16px
     }
 
-    /* .header .header-actions .sidemenu-trigger {
-        display: none
-    } */
 
-    .floaty-bar,
-    .header .header-actions .mobilemenu-trigger {
-        display: -ms-flexbox;
-        display: flex
-    }
 }
 
 @media screen and (max-width:480px) {

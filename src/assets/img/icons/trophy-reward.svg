@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <!-- Golden gradient for trophy -->    
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF8C00;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Silver gradient for base -->    
+    <linearGradient id="silverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8E8E8;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#C0C0C0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A8A8A8;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Sparkle gradient -->
+    <radialGradient id="sparkleGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Trophy Base -->
+  <rect x="70" y="150" width="60" height="20" rx="10" fill="url(#silverGradient)" stroke="#999" stroke-width="1"/>
+  
+  <!-- Trophy Stem -->
+  <rect x="90" y="130" width="20" height="25" fill="url(#silverGradient)" stroke="#999" stroke-width="1"/>
+  
+  <!-- Trophy Cup Body -->
+  <path d="M60 50 Q60 40 70 40 L130 40 Q140 40 140 50 L140 110 Q140 130 120 130 L80 130 Q60 130 60 110 Z" 
+        fill="url(#goldGradient)" stroke="#CC8400" stroke-width="2"/>
+  
+  <!-- Trophy Handles -->
+  <ellipse cx="45" cy="70" rx="8" ry="15" fill="none" stroke="url(#goldGradient)" stroke-width="4"/>
+  <ellipse cx="155" cy="70" rx="8" ry="15" fill="none" stroke="url(#goldGradient)" stroke-width="4"/>
+  
+  <!-- Trophy Rim -->
+  <ellipse cx="100" cy="45" rx="35" ry="8" fill="url(#goldGradient)" stroke="#CC8400" stroke-width="1"/>
+  
+  <!-- Trophy Highlight -->
+  <ellipse cx="85" cy="65" rx="8" ry="20" fill="url(#sparkleGradient)" opacity="0.6"/>
+  
+  <!-- Star on Trophy -->
+  <g transform="translate(100,80)">
+    <path d="M0,-8 L2.4,-2.4 L8,0 L2.4,2.4 L0,8 L-2.4,2.4 L-8,0 L-2.4,-2.4 Z" 
+          fill="#FFFFFF" opacity="0.9"/>
+  </g>
+  
+  <!-- Sparkles around trophy -->
+  <g opacity="0.7">
+    <!-- Large sparkle top-left -->
+    <g transform="translate(40,30)">
+      <path d="M0,-6 L1.8,-1.8 L6,0 L1.8,1.8 L0,6 L-1.8,1.8 L-6,0 L-1.8,-1.8 Z" 
+            fill="#FFD700"/>
+    </g>
+    
+    <!-- Medium sparkle top-right -->
+    <g transform="translate(160,35)">
+      <path d="M0,-4 L1.2,-1.2 L4,0 L1.2,1.2 L0,4 L-1.2,1.2 L-4,0 L-1.2,-1.2 Z" 
+            fill="#FFA500"/>
+    </g>
+    
+    <!-- Small sparkle left -->
+    <g transform="translate(25,90)">
+      <path d="M0,-3 L0.9,-0.9 L3,0 L0.9,0.9 L0,3 L-0.9,0.9 L-3,0 L-0.9,-0.9 Z" 
+            fill="#FFD700"/>
+    </g>
+    
+    <!-- Small sparkle right -->
+    <g transform="translate(175,95)">
+      <path d="M0,-3 L0.9,-0.9 L3,0 L0.9,0.9 L0,3 L-0.9,0.9 L-3,0 L-0.9,-0.9 Z" 
+            fill="#FFA500"/>
+    </g>
+    
+    <!-- Tiny sparkles -->
+    <circle cx="50" cy="120" r="1.5" fill="#FFD700"/>
+    <circle cx="150" cy="125" r="1.5" fill="#FFA500"/>
+    <circle cx="30" cy="60" r="1" fill="#FFD700"/>
+    <circle cx="170" cy="65" r="1" fill="#FFA500"/>
+  </g>
+  
+  <!-- Trophy shadow/depth -->
+  <ellipse cx="100" cy="185" rx="40" ry="8" fill="#000000" opacity="0.2"/>
+</svg>
