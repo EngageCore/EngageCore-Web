@@ -95,6 +95,7 @@ const sidebar = useSidebarStore()
   transition: background 220ms ease;
 }
 .mobile-sidebar .mobile-drawer {
+  margin-top: 60px;
   position: absolute;
   top: 0;
   left: 0;

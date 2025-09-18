@@ -4,10 +4,11 @@
       <!-- Close Button -->
       <button class="close-btn" @click="closeModal">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" />
         </svg>
       </button>
-      
+
       <!-- Prize Display -->
       <div class="prize-section">
         <div class="celebration-icon">🎉</div>
@@ -17,12 +18,12 @@
           <p class="prize-text">You won: <span class="prize-name">{{ getPrizeName(prize) }}</span></p>
         </div>
       </div>
-      
+
       <!-- Celebration Effects -->
       <div class="celebration-effects">
         <div v-for="n in 8" :key="n" class="confetti" :style="getConfettiStyle(n)"></div>
       </div>
-      
+
       <!-- Action Button -->
       <button class="claim-btn" @click="closeModal">
         Awesome!
@@ -32,7 +33,6 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 
 const props = defineProps({
   prize: {
@@ -73,7 +73,7 @@ const getConfettiStyle = (n) => {
   const y = Math.sin(angle) * radius
   const delay = n * 0.1
   const color = colors[n % colors.length]
-  
+
   return {
     left: `calc(50% + ${x}px)`,
     top: `calc(50% + ${y}px)`,
@@ -87,6 +87,7 @@ const getConfettiStyle = (n) => {
 /* Import Gaming Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800&display=swap');
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -110,11 +111,11 @@ const getConfettiStyle = (n) => {
   max-width: 400px;
   width: 90%;
   text-align: center;
-  box-shadow: 
+  box-shadow:
     0 0 30px rgba(122, 77, 246, 0.5),
     0 20px 40px rgba(0, 0, 0, 0.3);
   animation: modalSlideIn 0.4s ease-out;
-  font-family: 'Orbitron', 'Exo 2', monospace;
+  font-family: Titillium Web, sans-serif;
 }
 
 .close-btn {
@@ -128,7 +129,7 @@ const getConfettiStyle = (n) => {
   padding: 5px;
   border-radius: 50%;
   transition: all 0.2s ease;
-  width:50px;
+  width: 50px;
 }
 
 .close-btn:hover {
@@ -205,7 +206,7 @@ const getConfettiStyle = (n) => {
   padding: 15px 40px;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Orbitron', 'Exo 2', monospace;
+  font-family: Titillium Web, sans-serif;
   text-transform: uppercase;
   letter-spacing: 1px;
   box-shadow: 0 4px 15px rgba(122, 77, 246, 0.3);
@@ -221,8 +222,13 @@ const getConfettiStyle = (n) => {
 }
 
 @keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes modalSlideIn {
@@ -230,6 +236,7 @@ const getConfettiStyle = (n) => {
     transform: scale(0.7) translateY(-50px);
     opacity: 0;
   }
+
   100% {
     transform: scale(1) translateY(0);
     opacity: 1;
@@ -237,16 +244,26 @@ const getConfettiStyle = (n) => {
 }
 
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes prizeGlow {
-  0%, 100% { 
+
+  0%,
+  100% {
     transform: scale(1);
     filter: drop-shadow(0 0 10px rgba(122, 77, 246, 0.5));
   }
-  50% { 
+
+  50% {
     transform: scale(1.05);
     filter: drop-shadow(0 0 20px rgba(122, 77, 246, 0.8));
   }
@@ -257,6 +274,7 @@ const getConfettiStyle = (n) => {
     transform: translateY(-20px) rotate(0deg);
     opacity: 1;
   }
+
   100% {
     transform: translateY(200px) rotate(360deg);
     opacity: 0;
@@ -269,15 +287,15 @@ const getConfettiStyle = (n) => {
     padding: 30px 20px;
     margin: 20px;
   }
-  
+
   .win-title {
     font-size: 28px;
   }
-  
+
   .prize-icon {
     font-size: 48px;
   }
-  
+
   .claim-btn {
     padding: 12px 30px;
     font-size: 16px;

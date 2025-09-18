@@ -4,8 +4,8 @@
     <svg viewBox="0 0 120 132" class="hex-bg">
       <polygon
         points="60,2 116,33 116,99 60,130 4,99 4,33"
-        fill="#ffffff"
-        stroke="#ffffff"
+        fill="#1d2333"
+        stroke="#1d2333"
         stroke-width="4"
         stroke-linejoin="round"
       />

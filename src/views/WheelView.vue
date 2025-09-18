@@ -1,119 +1,98 @@
 <template>
   <div class="wheel-view-container">
     <!-- Interactive Background -->
-    <InteractiveBackground 
-      :isSpinning="isSpinning" 
-      :showCelebration="showCelebration"
-      :celebrationType="celebrationType"
-    />
-    
+    <InteractiveBackground :isSpinning="isSpinning" :showCelebration="showCelebration"
+      :celebrationType="celebrationType" />
+
     <!-- Winning Modal -->
-    <WinningModal 
-      v-if="showWinModal"
-      :prize="lastPrize"
-      :celebrationType="celebrationType"
-      @close="closeWinModal"
-    />
-    
+    <WinningModal v-if="showWinModal" :prize="lastPrize" :celebrationType="celebrationType" @close="closeWinModal" />
+
     <div class="game-layout">
-    <!-- Page Header -->
-    <div class="page-header">
-      <div class="header-controls">
-        <button 
-          class="sound-toggle-btn" 
-          :class="{ 'muted': !soundEnabled }"
-          @click="toggleSound"
-          title="Toggle Sound"
-        >
-          <span v-if="soundEnabled">🔊</span>
-          <span v-else>🔇</span>
-        </button>
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="header-controls">
+          <button class="sound-toggle-btn" :class="{ 'muted': !soundEnabled }" @click="toggleSound"
+            title="Toggle Sound">
+            <span v-if="soundEnabled">🔊</span>
+            <span v-else>🔇</span>
+          </button>
+        </div>
+        <h1 class="page-title"> <svg class="menu-item-link-icon" :class="`icon-streams`">
+            <use :xlink:href="`#svg-streams`"></use>
+          </svg> Spin & Win</h1>
+        <p class="page-description">Test your luck with our exciting wheel of fortune! Spin to win amazing prizes and
+          rewards.</p>
       </div>
-      <h1 class="page-title">🎰 Spin & Win</h1>
-      <p class="page-description">Test your luck with our exciting wheel of fortune! Spin to win amazing prizes and rewards.</p>
-    </div>
-    
-    <!-- Game Content Grid -->
-    <div class="game-content">
-      <!-- Main Game Area -->
-      <div class="main-game-area">
-        <!-- Enhanced Wheel Container -->
-        <div class="wheel-container">
-          <!-- Outer Decorative Ring -->
-          <div class="wheel-outer-ring">
-            <div class="ring-1 ring-decoration"></div>
-            <div class="ring-2 ring-decoration"></div>
-            <div class="ring-decoration ring-3"></div>
-          </div>
-          
-          <!-- Wheel Frame Layers -->
-          <div class="wheel-frame-layers">
-            <div class="frame-layer frame-outer"></div>
-            <div class="frame-layer frame-middle"></div>
-            <div class="frame-layer frame-inner"></div>
-          </div>
-          
-          <!-- Lucky Wheel -->
-          <div class="wheel-wrapper">
-            <!-- Wheel Shadow Base -->
-            <div class="wheel-shadow-base"></div>
-            
-            <!-- Main Wheel -->
-            <div class="wheel-main">
-              <LuckyWheel
-                ref="myLucky"
-                :width="wheelSize"
-                :height="wheelSize"
-                :prizes="prizes"
-                :blocks="blocks"
-                :buttons="buttons"
-                :defaultConfig="{ 
-                  speed: 20, 
-                  accelerationTime: 2000, 
-                  decelerationTime: 3000
-                }"
-                @end="onEnd"
-              />
+
+      <!-- Game Content Grid -->
+      <div class="game-content">
+        <!-- Main Game Area -->
+        <div class="main-game-area">
+          <!-- Enhanced Wheel Container -->
+          <div class="wheel-container">
+            <!-- Outer Decorative Ring -->
+            <div class="wheel-outer-ring">
+              <div class="ring-1 ring-decoration"></div>
+              <div class="ring-2 ring-decoration"></div>
+              <div class="ring-decoration ring-3"></div>
             </div>
-            
-            <!-- Wheel Highlight Overlay -->
-            <div class="wheel-highlight-overlay"></div>
+
+            <!-- Wheel Frame Layers -->
+            <div class="wheel-frame-layers">
+              <div class="frame-layer frame-outer"></div>
+              <div class="frame-layer frame-middle"></div>
+              <div class="frame-layer frame-inner"></div>
+            </div>
+
+            <!-- Lucky Wheel -->
+            <div class="wheel-wrapper">
+              <!-- Wheel Shadow Base -->
+              <div class="wheel-shadow-base"></div>
+
+              <!-- Main Wheel -->
+              <div class="wheel-main">
+                <LuckyWheel ref="myLucky" :width="wheelSize" :height="wheelSize" :prizes="prizes" :blocks="blocks"
+                  :buttons="buttons" :defaultConfig="{
+                    speed: 20,
+                    accelerationTime: 2000,
+                    decelerationTime: 3000
+                  }" @end="onEnd" />
+              </div>
+
+              <!-- Wheel Highlight Overlay -->
+              <div class="wheel-highlight-overlay"></div>
+            </div>
+
+            <!-- Corner Decorations -->
+            <div class="corner-decorations">
+              <div class="corner-decoration corner-tl"></div>
+              <div class="corner-decoration corner-tr"></div>
+              <div class="corner-decoration corner-bl"></div>
+              <div class="corner-decoration corner-br"></div>
+            </div>
           </div>
-          
-          <!-- Corner Decorations -->
-          <div class="corner-decorations">
-            <div class="corner-decoration corner-tl"></div>
-            <div class="corner-decoration corner-tr"></div>
-            <div class="corner-decoration corner-bl"></div>
-            <div class="corner-decoration corner-br"></div>
+
+          <!-- Simple Spin Button -->
+          <div class="spin-button-area">
+            <button class="spin-btn" :class="{ 'spinning': isSpinning, 'disabled': spinsLeft <= 0 }"
+              :disabled="isSpinning || spinsLeft <= 0" @click="onStart">
+              {{ isSpinning ? 'SPINNING...' : `SPIN (${spinsLeft})` }}
+            </button>
+
+            <!-- Spin Counter -->
+            <div class="spin-counter">
+              <div class="counter-label">{{ spinsLeft }} spins remaining</div>
+            </div>
           </div>
         </div>
 
-        <!-- Simple Spin Button -->
-        <div class="spin-button-area">
-          <button 
-            class="spin-btn" 
-            :class="{ 'spinning': isSpinning, 'disabled': spinsLeft <= 0 }"
-            :disabled="isSpinning || spinsLeft <= 0" 
-            @click="onStart"
-          >
-            {{ isSpinning ? 'SPINNING...' : `SPIN (${spinsLeft})` }}
-          </button>
-          
-          <!-- Spin Counter -->
-          <div class="spin-counter">
-            <div class="counter-label">{{ spinsLeft }} spins remaining</div>
-          </div>
+        <!-- Winning History Panel -->
+        <div class="winning-panel-container">
+          <WinningHistoryPanel />
         </div>
-      </div>
-      
-      <!-- Winning History Panel -->
-      <div class="winning-panel-container">
-        <WinningHistoryPanel />
       </div>
     </div>
   </div>
-</div>
 </template>
 
 <script setup>
@@ -127,7 +106,7 @@ import { computed, onMounted, onUnmounted, ref } from "vue"
 const DESKTOP_WHEEL_SIZE = "500px"
 const MOBILE_WHEEL_SIZE = "320px"
 const INIT_SPINS = 3
-const ICONS = ["💰","👑","🎲","🎰","🎁","⭐","🔥","🍀"]
+const ICONS = ["💰", "👑", "🎲", "🎰", "🎁", "⭐", "🔥", "🍀"]
 
 // 静态资源
 import segmentsSvg from '@/assets/img/wheel/wheel-8-segments.svg'
@@ -180,9 +159,9 @@ const prizes = computed(() => ICONS.map(icon => ({
   radius: "60%",
   range: 30,
   fonts: [
-    { 
-      text: icon, 
-      fontColor: "#000", 
+    {
+      text: icon,
+      fontColor: "#000",
       fontSize: windowWidth.value < 768 ? "20px" : "26px",
       top: "40%"
     }
@@ -203,10 +182,10 @@ const buttons = [
 //#region 游戏逻辑
 const onStart = () => {
   if (spinsLeft.value <= 0) return
-  
+
   // Play button click sound
   playButtonClick()
-  
+
   spinsLeft.value--
   isSpinning.value = true
   showCelebration.value = false
@@ -230,16 +209,16 @@ const onEnd = (prize) => {
   isSpinning.value = false
   const prizeIcon = prize.fonts[0].text
   lastPrize.value = prizeIcon
-  
+
   // Stop spinning sound
   stopSpinSound()
-  
+
   // Remove spinning class from wheel wrapper
   const wheelWrapper = document.querySelector('.wheel-wrapper')
   if (wheelWrapper) {
     wheelWrapper.classList.remove('spinning')
   }
-  
+
   // Determine celebration type based on prize
   if (prizeIcon === '👑' || prizeIcon === '💰') {
     celebrationType.value = 'jackpot'
@@ -248,22 +227,22 @@ const onEnd = (prize) => {
   } else {
     celebrationType.value = 'default'
   }
-  
+
   // Play winning sound based on prize type
   setTimeout(() => {
     playWinSound(celebrationType.value)
   }, 200)
-  
+
   // Show winning modal after a short delay
   setTimeout(() => {
     showWinModal.value = true
   }, 500)
-  
+
   // Trigger background celebration
   setTimeout(() => {
     showCelebration.value = true
   }, 800)
-  
+
   // Hide background celebration after 3 seconds
   setTimeout(() => {
     showCelebration.value = false
@@ -297,7 +276,7 @@ const closeWinModal = () => {
   gap: 30px;
   min-height: calc(100vh - 80px);
   padding: 100px 20px 20px 20px;
-  font-family: 'Orbitron', 'Exo 2', monospace;
+  font-family: Titillium Web, sans-serif;
   position: relative;
   z-index: 1;
 }
@@ -307,6 +286,7 @@ const closeWinModal = () => {
   text-align: center;
   margin-bottom: 20px;
   position: relative;
+  margin-top: 30px;
 }
 
 .header-controls {
@@ -352,7 +332,7 @@ const closeWinModal = () => {
   font-size: 4rem;
   font-weight: 700;
   color: #fff;
-  text-shadow: 
+  text-shadow:
     0 0 30px rgba(122, 77, 246, 1),
     0 0 15px rgba(255, 255, 255, 0.5),
     2px 2px 4px rgba(0, 0, 0, 0.8);
@@ -362,6 +342,16 @@ const closeWinModal = () => {
   background-size: 200% 200%;
   background-clip: text;
   position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+
+  >svg {
+    width: 50px;
+    fill: #c2acff;
+    height: 50px;
+  }
 }
 
 .page-description {
@@ -479,11 +469,11 @@ const closeWinModal = () => {
   right: 40px;
   bottom: 40px;
   border-color: #d4af37;
-  background: linear-gradient(45deg, 
-    rgba(212, 175, 55, 0.1) 0%, 
-    rgba(255, 215, 0, 0.05) 50%, 
-    rgba(212, 175, 55, 0.1) 100%);
-  box-shadow: 
+  background: linear-gradient(45deg,
+      rgba(212, 175, 55, 0.1) 0%,
+      rgba(255, 215, 0, 0.05) 50%,
+      rgba(212, 175, 55, 0.1) 100%);
+  box-shadow:
     0 0 30px rgba(212, 175, 55, 0.5),
     inset 0 0 20px rgba(0, 0, 0, 0.3),
     inset 0 2px 0 rgba(255, 255, 255, 0.3),
@@ -496,11 +486,11 @@ const closeWinModal = () => {
   right: 50px;
   bottom: 50px;
   border-color: #7a4df6;
-  background: linear-gradient(135deg, 
-    rgba(122, 77, 246, 0.1) 0%, 
-    rgba(157, 111, 255, 0.05) 50%, 
-    rgba(122, 77, 246, 0.1) 100%);
-  box-shadow: 
+  background: linear-gradient(135deg,
+      rgba(122, 77, 246, 0.1) 0%,
+      rgba(157, 111, 255, 0.05) 50%,
+      rgba(122, 77, 246, 0.1) 100%);
+  box-shadow:
     0 0 20px rgba(122, 77, 246, 0.4),
     inset 0 0 15px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -512,11 +502,11 @@ const closeWinModal = () => {
   right: 60px;
   bottom: 60px;
   border-color: rgba(255, 255, 255, 0.6);
-  background: linear-gradient(90deg, 
-    rgba(255, 255, 255, 0.05) 0%, 
-    rgba(255, 255, 255, 0.1) 50%, 
-    rgba(255, 255, 255, 0.05) 100%);
-  box-shadow: 
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 100%);
+  box-shadow:
     0 0 15px rgba(255, 255, 255, 0.3),
     inset 0 0 10px rgba(0, 0, 0, 0.1);
 }
@@ -536,11 +526,11 @@ const closeWinModal = () => {
   left: -30px;
   right: -30px;
   bottom: -30px;
-  background: radial-gradient(circle, 
-    rgba(122, 77, 246, 0.4) 0%, 
-    rgba(255, 215, 0, 0.2) 30%,
-    rgba(122, 77, 246, 0.1) 60%,
-    transparent 80%);
+  background: radial-gradient(circle,
+      rgba(122, 77, 246, 0.4) 0%,
+      rgba(255, 215, 0, 0.2) 30%,
+      rgba(122, 77, 246, 0.1) 60%,
+      transparent 80%);
   border-radius: 50%;
   z-index: -1;
   animation: wheelGlow 3s ease-in-out infinite alternate;
@@ -553,10 +543,10 @@ const closeWinModal = () => {
   left: 10px;
   right: 10px;
   bottom: 10px;
-  background: radial-gradient(circle, 
-    rgba(0, 0, 0, 0.4) 0%, 
-    rgba(0, 0, 0, 0.2) 50%, 
-    transparent 80%);
+  background: radial-gradient(circle,
+      rgba(0, 0, 0, 0.4) 0%,
+      rgba(0, 0, 0, 0.2) 50%,
+      transparent 80%);
   border-radius: 50%;
   z-index: 1;
   filter: blur(8px);
@@ -568,7 +558,7 @@ const closeWinModal = () => {
   z-index: 3;
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 
+  box-shadow:
     0 0 50px rgba(122, 77, 246, 0.6),
     0 10px 30px rgba(0, 0, 0, 0.4),
     inset 0 0 0 3px rgba(255, 255, 255, 0.1),
@@ -582,11 +572,11 @@ const closeWinModal = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.3) 0%, 
-    transparent 30%, 
-    transparent 70%, 
-    rgba(255, 255, 255, 0.1) 100%);
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.3) 0%,
+      transparent 30%,
+      transparent 70%,
+      rgba(255, 255, 255, 0.1) 100%);
   border-radius: 50%;
   z-index: 4;
   pointer-events: none;
@@ -609,10 +599,10 @@ const closeWinModal = () => {
   width: 40px;
   height: 40px;
   border: 2px solid #d4af37;
-  background: linear-gradient(45deg, 
-    rgba(212, 175, 55, 0.3) 0%, 
-    rgba(255, 215, 0, 0.2) 100%);
-  box-shadow: 
+  background: linear-gradient(45deg,
+      rgba(212, 175, 55, 0.3) 0%,
+      rgba(255, 215, 0, 0.2) 100%);
+  box-shadow:
     0 0 15px rgba(212, 175, 55, 0.5),
     inset 0 0 10px rgba(255, 255, 255, 0.2);
 }
@@ -652,7 +642,7 @@ const closeWinModal = () => {
 }
 
 .wheel-wrapper:hover .wheel-main {
-  box-shadow: 
+  box-shadow:
     0 0 70px rgba(122, 77, 246, 0.8),
     0 15px 40px rgba(0, 0, 0, 0.5),
     inset 0 0 0 3px rgba(255, 255, 255, 0.2),
@@ -664,7 +654,7 @@ const closeWinModal = () => {
 }
 
 .wheel-wrapper.spinning .wheel-main {
-  box-shadow: 
+  box-shadow:
     0 0 100px rgba(255, 215, 0, 0.8),
     0 20px 50px rgba(0, 0, 0, 0.6),
     inset 0 0 0 3px rgba(255, 255, 255, 0.3),
@@ -680,55 +670,73 @@ const closeWinModal = () => {
 }
 
 @keyframes wheelGlow {
-  0% { 
-    opacity: 0.6; 
+  0% {
+    opacity: 0.6;
     transform: scale(1);
     filter: hue-rotate(0deg);
   }
+
   50% {
     opacity: 0.9;
     transform: scale(1.05);
     filter: hue-rotate(180deg);
   }
-  100% { 
-    opacity: 1; 
+
+  100% {
+    opacity: 1;
     transform: scale(1.1);
     filter: hue-rotate(360deg);
   }
 }
 
 @keyframes wheelSpin {
-  0% { transform: rotate(0deg) scale(1); }
-  50% { transform: rotate(1800deg) scale(1.05); }
-  100% { transform: rotate(3600deg) scale(1); }
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  50% {
+    transform: rotate(1800deg) scale(1.05);
+  }
+
+  100% {
+    transform: rotate(3600deg) scale(1);
+  }
 }
 
 @keyframes ringRotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes highlightSpin {
-  0% { 
+  0% {
     transform: rotate(0deg);
     opacity: 0.8;
   }
+
   50% {
     transform: rotate(180deg);
     opacity: 1;
   }
-  100% { 
+
+  100% {
     transform: rotate(360deg);
     opacity: 0.8;
   }
 }
 
 @keyframes cornerPulse {
-  0% { 
+  0% {
     transform: scale(1) rotate(-45deg);
     box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
   }
-  100% { 
+
+  100% {
     transform: scale(1.2) rotate(-45deg);
     box-shadow: 0 0 25px rgba(212, 175, 55, 0.8);
   }
@@ -736,12 +744,13 @@ const closeWinModal = () => {
 
 @keyframes frameGlow {
   0% {
-    box-shadow: 
+    box-shadow:
       0 0 30px rgba(212, 175, 55, 0.5),
       inset 0 0 20px rgba(0, 0, 0, 0.3);
   }
+
   100% {
-    box-shadow: 
+    box-shadow:
       0 0 50px rgba(212, 175, 55, 0.8),
       inset 0 0 30px rgba(0, 0, 0, 0.4);
   }
@@ -761,7 +770,7 @@ const closeWinModal = () => {
   border-radius: 25px;
   background: linear-gradient(135deg, #7a4df6 0%, #4a1f9e 100%);
   color: #fff;
-  font-family: 'Orbitron', 'Exo 2', monospace;
+  font-family: Titillium Web, sans-serif;
   font-size: 18px;
   font-weight: bold;
   letter-spacing: 1px;
@@ -769,7 +778,7 @@ const closeWinModal = () => {
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  box-shadow: 
+  box-shadow:
     0 0 20px rgba(122, 77, 246, 0.6),
     0 4px 15px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -794,7 +803,7 @@ const closeWinModal = () => {
 
 .spin-btn:hover:not(.disabled) {
   transform: translateY(-3px) scale(1.05);
-  box-shadow: 
+  box-shadow:
     0 0 30px rgba(122, 77, 246, 0.8),
     0 8px 20px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -809,7 +818,7 @@ const closeWinModal = () => {
 .spin-btn.spinning {
   pointer-events: none;
   background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-  box-shadow: 
+  box-shadow:
     0 0 40px rgba(255, 107, 53, 0.8),
     0 6px 20px rgba(0, 0, 0, 0.4);
 }
@@ -824,28 +833,41 @@ const closeWinModal = () => {
 }
 
 @keyframes buttonPulse {
-  0%, 100% { 
+
+  0%,
+  100% {
     transform: scale(1);
-    box-shadow: 
+    box-shadow:
       0 0 20px rgba(122, 77, 246, 0.6),
       0 4px 15px rgba(0, 0, 0, 0.3);
   }
-  50% { 
+
+  50% {
     transform: scale(1.02);
-    box-shadow: 
+    box-shadow:
       0 0 25px rgba(122, 77, 246, 0.8),
       0 6px 18px rgba(0, 0, 0, 0.4);
   }
 }
 
 @keyframes buttonSpinning {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes buttonGlow {
-  0% { box-shadow: 0 0 40px rgba(255, 107, 53, 0.6); }
-  100% { box-shadow: 0 0 60px rgba(255, 107, 53, 1); }
+  0% {
+    box-shadow: 0 0 40px rgba(255, 107, 53, 0.6);
+  }
+
+  100% {
+    box-shadow: 0 0 60px rgba(255, 107, 53, 1);
+  }
 }
 
 /* Spin Counter */
@@ -874,35 +896,35 @@ const closeWinModal = () => {
     grid-template-rows: auto auto;
     gap: 25px;
   }
-  
+
   .game-layout {
     padding: 80px 15px 15px 15px;
   }
-  
+
   .page-title {
     font-size: 3rem;
   }
-  
+
   .page-description {
     font-size: 1.2rem;
   }
-  
+
   .winning-panel-container {
     order: 2;
     padding-top: 20px;
     display: flex;
     justify-content: center;
   }
-  
+
   .main-game-area {
     order: 1;
   }
-  
+
   .wheel-container {
     width: 500px;
     height: 500px;
   }
-  
+
   .corner-decoration {
     width: 35px;
     height: 35px;
@@ -913,11 +935,11 @@ const closeWinModal = () => {
   .game-layout {
     padding: 80px 15px 15px 15px;
   }
-  
+
   .page-title {
     font-size: 3rem;
   }
-  
+
   .page-description {
     font-size: 1.1rem;
   }
@@ -928,81 +950,81 @@ const closeWinModal = () => {
     padding: 90px 20px 10px 20px;
     gap: 20px;
   }
-  
+
   .page-title {
     font-size: 2.5rem;
     letter-spacing: 1px;
   }
-  
+
   .page-description {
     font-size: 1rem;
     max-width: 90%;
   }
-  
+
   .header-controls {
     top: -10px;
     right: -5px;
   }
-  
+
   .sound-toggle-btn {
     width: 45px;
     height: 45px;
     font-size: 18px;
   }
-  
+
   .spin-btn {
     padding: 16px 32px;
     font-size: 16px;
     min-height: 56px;
     min-width: 160px;
   }
-  
+
   .wheel-container {
     width: 400px;
     height: 400px;
     margin-bottom: 20px;
   }
-  
+
   .frame-outer {
     top: 30px;
     left: 30px;
     right: 30px;
     bottom: 30px;
   }
-  
+
   .frame-middle {
     top: 40px;
     left: 40px;
     right: 40px;
     bottom: 40px;
   }
-  
+
   .frame-inner {
     top: 50px;
     left: 50px;
     right: 50px;
     bottom: 50px;
   }
-  
+
   .corner-decoration {
     width: 30px;
     height: 30px;
   }
-  
+
   .ring-1 {
     top: 8px;
     left: 8px;
     right: 8px;
     bottom: 8px;
   }
-  
+
   .ring-2 {
     top: 15px;
     left: 15px;
     right: 15px;
     bottom: 15px;
   }
-  
+
   .ring-3 {
     top: 22px;
     left: 22px;
@@ -1016,49 +1038,49 @@ const closeWinModal = () => {
     padding: 90px 20px 10px 20px;
     gap: 15px;
   }
-  
+
   .page-title {
     font-size: 2rem;
     letter-spacing: 0.5px;
   }
-  
+
   .page-description {
     font-size: 0.9rem;
     max-width: 95%;
     line-height: 1.5;
   }
-  
+
   .header-controls {
     top: -15px;
     right: -10px;
   }
-  
+
   .sound-toggle-btn {
     width: 40px;
     height: 40px;
     font-size: 16px;
   }
-  
+
   .spin-btn {
     padding: 14px 28px;
     font-size: 15px;
     min-height: 52px;
     min-width: 140px;
   }
-  
+
   .main-game-area {
     gap: 20px;
   }
-  
+
   .counter-label {
     font-size: 13px;
   }
-  
+
   .wheel-container {
     width: 350px;
     height: 350px;
   }
-  
+
   .frame-outer {
     top: 25px;
     left: 25px;
@@ -1066,7 +1088,7 @@ const closeWinModal = () => {
     bottom: 25px;
     border-width: 2px;
   }
-  
+
   .frame-middle {
     top: 35px;
     left: 35px;
@@ -1074,7 +1096,7 @@ const closeWinModal = () => {
     bottom: 35px;
     border-width: 2px;
   }
-  
+
   .frame-inner {
     top: 45px;
     left: 45px;
@@ -1082,26 +1104,30 @@ const closeWinModal = () => {
     bottom: 45px;
     border-width: 1px;
   }
-  
+
   .corner-decoration {
     width: 25px;
     height: 25px;
     border-width: 1px;
   }
-  
-  .corner-tl, .corner-tr {
+
+  .corner-tl,
+  .corner-tr {
     top: 15px;
   }
-  
-  .corner-bl, .corner-br {
+
+  .corner-bl,
+  .corner-br {
     bottom: 15px;
   }
-  
-  .corner-tl, .corner-bl {
+
+  .corner-tl,
+  .corner-bl {
     left: 15px;
   }
-  
-  .corner-tr, .corner-br {
+
+  .corner-tr,
+  .corner-br {
     right: 15px;
   }
 }
@@ -1110,65 +1136,69 @@ const closeWinModal = () => {
   .page-title {
     font-size: 1.8rem;
   }
-  
+
   .page-description {
     font-size: 0.85rem;
   }
-  
+
   .spin-btn {
     padding: 12px 24px;
     font-size: 14px;
     min-height: 48px;
     min-width: 120px;
   }
-  
+
   .wheel-container {
     width: 300px;
     height: 300px;
   }
-  
+
   .frame-outer {
     top: 20px;
     left: 20px;
     right: 20px;
     bottom: 20px;
   }
-  
+
   .frame-middle {
     top: 30px;
     left: 30px;
     right: 30px;
     bottom: 30px;
   }
-  
+
   .frame-inner {
     top: 40px;
     left: 40px;
     right: 40px;
     bottom: 40px;
   }
-  
+
   .corner-decoration {
     width: 20px;
     height: 20px;
   }
-  
-  .corner-tl, .corner-tr {
+
+  .corner-tl,
+  .corner-tr {
     top: 12px;
   }
-  
-  .corner-bl, .corner-br {
+
+  .corner-bl,
+  .corner-br {
     bottom: 12px;
   }
-  
-  .corner-tl, .corner-bl {
+
+  .corner-tl,
+  .corner-bl {
     left: 12px;
   }
-  
-  .corner-tr, .corner-br {
+
+  .corner-tr,
+  .corner-br {
     right: 12px;
   }
-  
+
   .ring-decoration {
     border-width: 1px;
   }

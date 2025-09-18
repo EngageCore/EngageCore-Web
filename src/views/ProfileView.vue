@@ -12,16 +12,16 @@
         </div>
         <div class="social-links">
           <div href="#!" class="social-link">
-            <img src="@/assets/img/rank/bronzec-s.png"></img>
+            <img src="@/assets/img/rank/bronzec-s.png" />
           </div>
           <div href="#!" class="social-link">
-            <img src="@/assets/img/rank/silverc-s.png"></img>
+            <img src="@/assets/img/rank/silverc-s.png" />
           </div>
           <div href="#!" class="social-link">
-            <img src="@/assets/img/rank/goldc-s.png"></img>
+            <img src="@/assets/img/rank/goldc-s.png" />
           </div>
           <div href="#!" class="social-link">
-            <img src="@/assets/img/rank/platinumc-s.png"></img>
+            <img src="@/assets/img/rank/platinumc-s.png" />
           </div>
         </div>
         <div class="user-stats">
@@ -49,12 +49,8 @@
     </div>
 
     <div class="grid grid-3-3-3-3 top-space centered">
-      <div
-        class="badge-item-stat"
-        v-for="(membership, idx) in membershipList"
-        :key="membership.id"
-        :class="[{ locked: isLocked(idx), current: isCurrent(idx), achieved: isAchieved(idx) }, tierClass(membership.key)]"
-      >
+      <div class="badge-item-stat" v-for="(membership, idx) in membershipList" :key="membership.id"
+        :class="[{ locked: isLocked(idx), current: isCurrent(idx), achieved: isAchieved(idx) }, tierClass(membership.key)]">
         <!-- Gray overlay when locked -->
         <div class="badge-overlay" v-if="isLocked(idx)"></div>
 
@@ -66,13 +62,15 @@
 
         <div class="progress-stat">
           <div class="progress-stat-bar">
-            <div class="progress" :style="{ '--percent': (membership.currentExp / membership.requiredExp) * 100 + '%' }"></div>
+            <div class="progress"
+              :style="{ '--percent': (membership.currentExp / membership.requiredExp) * 100 + '%' }"></div>
           </div>
 
           <div class="bar-progress-wrap">
             <p class="bar-progress-info negative center">
               <span class="bar-progress-text no-space">
-                {{ membership.currentExp >= membership.requiredExp ? 'Achieved' : membership.currentExp + ' / ' + membership.requiredExp }}
+                {{ membership.currentExp >= membership.requiredExp ? 'Achieved' : membership.currentExp + ' / ' +
+                  membership.requiredExp }}
               </span>
             </p>
           </div>
@@ -83,9 +81,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
-import HexAvatar from '@/components/HexAvatar.vue'
-import { useRouter } from 'vue-router'
+import HexAvatar from '@/components/HexAvatar.vue';
+import { computed, ref } from "vue";
+import { useRouter } from 'vue-router';
 
 const coverSrc = new URL('@/assets/img/cover/01.jpg', import.meta.url).href
 const avatarSrc = new URL('@/assets/img/avatar/29.jpg', import.meta.url).href
@@ -198,26 +196,37 @@ const tierClass = (key) => {
   position: relative;
   overflow: hidden;
   transform-origin: center;
-  transition: transform .2s ease, box-shadow .25s ease, filter .25s ease; /* add transform for scale */
+  transition: transform .2s ease, box-shadow .25s ease, filter .25s ease;
+  /* add transform for scale */
   cursor: pointer;
-  will-change: transform, box-shadow; /* prepare for transform and shadow */
+  will-change: transform, box-shadow;
+  /* prepare for transform and shadow */
   border-radius: 16px;
 }
+
 /* Hover: only box-shadow + scale (no border ring) */
 .badge-item-stat:hover {
   transform: scale(1.03);
   box-shadow: 0 14px 38px rgba(94, 92, 154, 0.20);
 }
+
 /* Remove image transform on hover */
-.badge-item-stat .badge-item-stat-image { transition: none; }
+.badge-item-stat .badge-item-stat-image {
+  transition: none;
+}
 
 /* Remove shining effects: ring and shimmer */
 /* delete hover ::before ring by not defining it */
 /* delete shimmer sweep */
-.badge-item-stat::after { content: none !important; }
+.badge-item-stat::after {
+  content: none !important;
+}
 
 /* Locked: gray overlay + grayscale + lock icon (top-right) */
-.badge-item-stat.locked { filter: grayscale(100%); }
+.badge-item-stat.locked {
+  filter: grayscale(100%);
+}
+
 .badge-item-stat .badge-overlay {
   position: absolute;
   inset: 0;
@@ -226,6 +235,7 @@ const tierClass = (key) => {
   z-index: 3;
   pointer-events: none;
 }
+
 .badge-item-stat.locked::before {
   content: '🔒';
   position: absolute;
@@ -233,23 +243,29 @@ const tierClass = (key) => {
   top: 10px;
   right: 10px;
   font-size: 18px;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,.4));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .4));
   pointer-events: none;
 }
+
 /* Do not change overlay on hover; only box-shadow */
 /* Ensure locked regains color on hover */
-.badge-item-stat.locked:hover { filter: grayscale(0%); }
+.badge-item-stat.locked:hover {
+  filter: grayscale(0%);
+}
 
 /* Current: no static border/shadow */
 .badge-item-stat.current {
   box-shadow: none;
 }
+
 .badge-item-stat.current::before {
   content: 'CURRENT';
   position: absolute;
-  top: 8px; left: 8px;
+  top: 8px;
+  left: 8px;
   z-index: 5;
-  font-size: 10px; font-weight: 700;
+  font-size: 10px;
+  font-weight: 700;
   color: #fff;
   background: #615dfa;
   padding: 2px 6px;
@@ -261,6 +277,7 @@ const tierClass = (key) => {
 .badge-item-stat.achieved {
   box-shadow: none;
 }
+
 /* No special hover, rely on common hover only-box-shadow rule */
 /* Removed achieved:hover override to keep a single hover style */
 
@@ -279,6 +296,7 @@ const tierClass = (key) => {
 
 /* Mobile */
 @media screen and (max-width: 480px) {
+
   /* Ensure cover remains visible and compact on mobile */
   .profile-header .profile-header-cover {
     background-size: cover;
@@ -296,6 +314,7 @@ const tierClass = (key) => {
     justify-content: center;
     gap: 8px;
   }
+
   .profile-header .profile-header-info .social-links .social-link img {
     width: 28px;
     height: 28px;
@@ -306,6 +325,7 @@ const tierClass = (key) => {
   .user-stat.big {
     padding: 0 12px;
   }
+
   .user-avatar {
     margin-top: 60px;
     scale: .8;

@@ -7,30 +7,17 @@
 
     <!-- Tab Buttons -->
     <div class="tab-buttons">
-      <button 
-        class="tab-btn" 
-        :class="{ active: activeTab === 'recent' }"
-        @click="activeTab = 'recent'"
-      >
+      <button class="tab-btn" :class="{ active: activeTab === 'recent' }" @click="activeTab = 'recent'">
         Recent Wins
       </button>
-      <button 
-        class="tab-btn" 
-        :class="{ active: activeTab === 'top' }"
-        @click="activeTab = 'top'"
-      >
+      <button class="tab-btn" :class="{ active: activeTab === 'top' }" @click="activeTab = 'top'">
         Top Winners
       </button>
     </div>
 
     <!-- Winning History List -->
     <div class="history-list">
-      <div 
-        v-for="(win, index) in displayedWins" 
-        :key="index" 
-        class="history-item"
-        :class="{ 'big-win': win.isBigWin }"
-      >
+      <div v-for="(win, index) in displayedWins" :key="index" class="history-item" :class="{ 'big-win': win.isBigWin }">
         <div class="win-date">{{ win.date }}</div>
         <div class="win-details">
           <div class="player-info">
@@ -49,7 +36,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const activeTab = ref('recent')
 
@@ -79,6 +66,7 @@ const displayedWins = computed(() => {
 /* Import Gaming Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800&display=swap');
+
 .winning-history-panel {
   width: 450px;
   background: rgba(255, 255, 255, 0.05);
@@ -86,7 +74,7 @@ const displayedWins = computed(() => {
   border-radius: 20px;
   padding: 24px;
   font-family: 'Orbitron', 'Exo 2', monospace;
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.3),
     0 0 20px rgba(122, 77, 246, 0.2);
   backdrop-filter: blur(20px);
@@ -101,9 +89,9 @@ const displayedWins = computed(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(122, 77, 246, 0.1) 0%, 
-    rgba(74, 31, 158, 0.1) 100%);
+  background: linear-gradient(135deg,
+      rgba(122, 77, 246, 0.1) 0%,
+      rgba(74, 31, 158, 0.1) 100%);
   pointer-events: none;
 }
 
@@ -199,10 +187,10 @@ const displayedWins = computed(() => {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(122, 77, 246, 0.1), 
-    transparent);
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(122, 77, 246, 0.1),
+      transparent);
   transition: left 0.5s ease;
 }
 
@@ -223,8 +211,13 @@ const displayedWins = computed(() => {
 }
 
 @keyframes bigWinGlow {
-  0% { box-shadow: 0 0 15px rgba(122, 77, 246, 0.4); }
-  100% { box-shadow: 0 0 25px rgba(122, 77, 246, 0.6); }
+  0% {
+    box-shadow: 0 0 15px rgba(122, 77, 246, 0.4);
+  }
+
+  100% {
+    box-shadow: 0 0 25px rgba(122, 77, 246, 0.6);
+  }
 }
 
 .win-date {
@@ -270,15 +263,15 @@ const displayedWins = computed(() => {
     max-width: 450px;
     padding: 20px;
   }
-  
+
   .panel-title {
     font-size: 1.3rem;
   }
-  
+
   .history-list {
     max-height: 300px;
   }
-  
+
   .history-item {
     padding: 14px;
   }

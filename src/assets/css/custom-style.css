@@ -10,12 +10,13 @@
 
 .progress {
   --grad-start: #6a5af9;
-  --grad-end:   #4cd4f7;
-  --track:      #ebebeb;
+  --grad-end: #4cd4f7;
+  --track: #ebebeb;
   --percent: 0%;
 
   position: relative;
-  width: 100%;      /* 始终占满 */
+  width: 100%;
+  /* 始终占满 */
   height: 4px;
   border-radius: 999px;
   overflow: hidden;
@@ -28,7 +29,8 @@
   position: absolute;
   top: 0;
   right: 0;
-  left: var(--percent);  /* 从 percent 开始盖掉右边 */
+  left: var(--percent);
+  /* 从 percent 开始盖掉右边 */
   height: 100%;
   background: var(--track);
   transition: left 0.3s ease;
@@ -77,5 +79,14 @@ button:focus {
 
 /* 小屏使用模板原有宽度设置，这里仅确保不被 translate 干扰 */
 @media screen and (max-width: 1365px) {
-  .content-grid { transform: none !important; }
+  .content-grid {
+    transform: none !important;
+  }
+}
+
+
+
+.action-list.dark:after,
+.action-list.dark:before {
+  background-color: #616161cf;
 }
