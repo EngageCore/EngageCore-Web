@@ -14,13 +14,10 @@
 
         <div class="user-short-description">
           <RouterLink class="user-short-description-avatar" to="/profile">
-            <HexAvatar :avatar="avatarSrc" :progress="80" />
+            <HexAvatar :avatar="avatarSrc" :progress="userStore.userInfo.percentage_to_next_tier ?? 0" />
           </RouterLink>
           <p class="user-short-description-title">
-            <RouterLink to="/profile">Marina Valentine</RouterLink>
-          </p>
-          <p class="user-short-description-text">
-            <a href="#">www.gamehuntress.com</a>
+            <RouterLink to="/profile">{{ userStore.userInfo.first_name }} {{ userStore.userInfo.last_name }}</RouterLink>
           </p>
 
           <!-- Experience Bar -->
@@ -28,8 +25,7 @@
             <!-- BAR PROGRESS WRAP -->
             <div class="bar-progress-wrap">
               <!-- BAR PROGRESS INFO -->
-              <p class="bar-progress-info">Next: <span class="bar-progress-text">38<span
-                    class="bar-progress-unit">exp</span></span></p>
+              <p class="bar-progress-info">Next: <span class="bar-progress-text">{{ userStore.userInfo.points_to_next_tier ?? 0 }}<!--<span class="bar-progress-unit">exp</span>--></span></p>
               <!-- /BAR PROGRESS INFO -->
             </div>
             <!-- /BAR PROGRESS WRAP -->
@@ -58,7 +54,7 @@
       <nav v-else-if="!isMobile && !sidebar.isOpen" key="mini"
         class="navigation-widget navigation-widget-desktop closed sidebar left delayed">
         <RouterLink class="user-avatar small no-outline online" to="/profile">
-          <HexAvatar class="hex-avatar-sm" :avatar="avatarSrc" :progress="80" />
+          <HexAvatar class="hex-avatar-sm" :avatar="avatarSrc" :progress="userStore.userInfo.percentage_to_next_tier ?? 0" />
         </RouterLink>
 
         <ul class="menu small">
@@ -81,13 +77,10 @@
 
         <div class="user-short-description">
           <RouterLink class="user-short-description-avatar" to="/profile">
-            <HexAvatar :avatar="avatarSrc" :progress="80" />
+            <HexAvatar :avatar="avatarSrc" :progress="userStore.userInfo.percentage_to_next_tier ?? 0" />
           </RouterLink>
           <p class="user-short-description-title">
-            <RouterLink to="/profile">Marina Valentine</RouterLink>
-          </p>
-          <p class="user-short-description-text">
-            <a href="#">www.gamehuntress.com</a>
+            <RouterLink to="/profile">{{ userStore.userInfo.first_name }} {{ userStore.userInfo.last_name }}</RouterLink>
           </p>
 
           <!-- Experience Bar -->
@@ -95,8 +88,7 @@
             <!-- BAR PROGRESS WRAP -->
             <div class="bar-progress-wrap">
               <!-- BAR PROGRESS INFO -->
-              <p class="bar-progress-info">Next: <span class="bar-progress-text">38<span
-                    class="bar-progress-unit">exp</span></span></p>
+              <p class="bar-progress-info">Next: <span class="bar-progress-text">{{ userStore.userInfo.points_to_next_tier ?? 0 }}<!--<span class="bar-progress-unit">exp</span>--></span></p>
               <!-- /BAR PROGRESS INFO -->
             </div>
             <!-- /BAR PROGRESS WRAP -->
@@ -131,10 +123,12 @@ import HexAvatar from '@/components/HexAvatar.vue'
 import { useSidebarStore } from '@/stores/sidebar'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 const avatarSrc = new URL('@/assets/img/avatar/29.jpg', import.meta.url).href
 const route = useRoute()
 const sidebar = useSidebarStore()
+const userStore = useUserStore()
 
 // —— 尺寸（可按你的实际样式微调）——
 const W_DESKTOP = 300  // 展开宽度（px）
@@ -164,6 +158,22 @@ const menuItems = [
   { title: 'Missions', path: '/missions', icon: 'quests' },
   { title: 'History', path: '/history', icon: 'timeline' },
 ]
+
+const getProfile = async () => {
+  try {
+    const resp = await callApi("/member/profile-detail", "GET");
+
+    if(resp) {
+      userStore.setUserInfo(resp);
+    }
+  } catch (error) {
+    showError('Error', 'An unexpected error occurred while fetching profile.')
+  }
+};
+
+onMounted(async() => {
+  await getProfile();
+});
 </script>
 
 <style scoped>

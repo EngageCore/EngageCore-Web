@@ -1,72 +1,35 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, reactive, computed } from 'vue'
 
 export const useUserStore = defineStore('user', () => {
   // State
-  const user = ref({
+  const user = reactive({
     id: '',
-    name: '',
-    email: '',
-    points: 0,
-    level: 1,
-    levelName: 'Bronze',
-    dailySpinsRemaining: 3
+    first_name: '',
+    last_name: '',
+    percentage_to_next_tier: 0,
+    points_to_next_tier: 0
   })
 
   const isAuthenticated = ref(false)
 
   // Getters
-  const userInfo = computed(() => user.value)
-  const currentPoints = computed(() => user.value.points)
-  const currentLevel = computed(() => user.value.level)
-  const spinsRemaining = computed(() => user.value.dailySpinsRemaining)
+  const userInfo = computed(() => user)
 
   // Actions
-  const setUser = userData => {
-    user.value = { ...user.value, ...userData }
-    isAuthenticated.value = true
-  }
-
-  const updatePoints = newPoints => {
-    user.value.points = newPoints
-  }
-
-  const updateSpinsRemaining = spins => {
-    user.value.dailySpinsRemaining = spins
-  }
-
-  const updateLevel = (level, levelName) => {
-    user.value.level = level
-    user.value.levelName = levelName
+  const setUserInfo = (userInfoData) => {
+    Object.assign(user, userInfoData)
   }
 
   const logout = () => {
-    user.value = {
-      id: '',
-      name: '',
-      email: '',
-      points: 0,
-      level: 1,
-      levelName: 'Bronze',
-      dailySpinsRemaining: 3
-    }
-    isAuthenticated.value = false
+    Object.keys(user).forEach(key => {
+      user[key] = ''
+    })
   }
 
   return {
-    // State
-    user,
-    isAuthenticated,
-    // Getters
     userInfo,
-    currentPoints,
-    currentLevel,
-    spinsRemaining,
-    // Actions
-    setUser,
-    updatePoints,
-    updateSpinsRemaining,
-    updateLevel,
+    setUserInfo,
     logout
   }
 })

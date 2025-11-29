@@ -7,11 +7,11 @@
       <div class="profile-header-info">
         <div class="user-short-description big">
           <div class="user-avatar big user-short-description-avatar">
-            <HexAvatar :avatar="avatarSrc" :progress="userInfo.percentage_to_next_tier ?? 0" />
+            <HexAvatar :avatar="avatarSrc" :progress="userStore.userInfo.percentage_to_next_tier ?? 0" />
           </div>
 
           <div class="user-short-description-title">
-            {{ userInfo.first_name }} {{ userInfo.last_name }}
+            {{ userStore.userInfo.first_name }} {{ userStore.userInfo.last_name }}
           </div>
 
           <div class="user-short-description-text" @click="redirect('missions')">
@@ -21,17 +21,17 @@
 
         <div class="user-stats">
           <div class="user-stat big">
-            <p class="user-stat-title">{{ userInfo.spin_count }}</p>
+            <p class="user-stat-title">{{ userStore.userInfo.spin_count }}</p>
             <p class="user-stat-text">Spin</p>
           </div>
 
           <div class="user-stat big">
-            <p class="user-stat-title">{{ userInfo.active_missions }}</p>
+            <p class="user-stat-title">{{ userStore.userInfo.active_missions }}</p>
             <p class="user-stat-text">Mission</p>
           </div>
 
           <div class="user-stat big">
-            <p class="user-stat-title">{{ userInfo.completed_missions }}</p>
+            <p class="user-stat-title">{{ userStore.userInfo.completed_missions }}</p>
             <p class="user-stat-text">Completed</p>
           </div>
         </div>
@@ -122,23 +122,12 @@ const avatarSrc = new URL('@/assets/img/avatar/29.jpg', import.meta.url).href;
 const userStore = useUserStore();
 
 // =====================================
-// 1. Fetch Profile
-// =====================================
-const userInfo = reactive({});
-
 const getProfile = async () => {
   try {
     const resp = await callApi("/member/profile-detail", "GET");
 
     if(resp) {
-      Object.assign(userInfo, resp);
-      userStore.updateUserInfo({
-        id: resp.id,
-        first_name: resp.first_name,
-        last_name: resp.last_name,
-        percentage_to_next_tier: resp.percentage_to_next_tier,
-        points_to_next_tier: resp.points_to_next_tier
-      });
+      userStore.setUserInfo(resp);
     }
   } catch (error) {
     showError('Error', 'An unexpected error occurred while fetching profile.')
@@ -166,8 +155,8 @@ const getTierList = async () => {
 // 3. Current Tier Index
 // =====================================
 const currentTierIdIndex = computed(() => {
-  if (!tierList.value.length || !userInfo.current_membership_tier_id) return -1;
-  return tierList.value.findIndex(t => t.id === userInfo.current_membership_tier_id);
+  if (!tierList.value.length || !userStore.userInfo.current_membership_tier_id) return -1;
+  return tierList.value.findIndex(t => t.id === userStore.userInfo.current_membership_tier_id);
 });
 
 // =====================================
@@ -177,7 +166,7 @@ const playerTotalAcc = computed(() => {
   const idx = currentTierIdIndex.value;
   if (idx < 0) return 0;
 
-  const currentPoints = Number(userInfo.current_points || 0);
+  const currentPoints = Number(userStore.userInfo.current_points || 0);
 
   // Level 1 → 直接显示 current_points
   if (idx === 0) return currentPoints;
