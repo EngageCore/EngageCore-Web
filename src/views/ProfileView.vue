@@ -5,9 +5,9 @@
       <div class="profile-header-info">
         <div class="user-short-description big">
           <div class="user-avatar big user-short-description-avatar">
-            <HexAvatar :avatar="avatarSrc" :progress="80" />
+            <HexAvatar :avatar="avatarSrc" :progress="userInfo.percentage_to_next_tier || 0" />
           </div> <!-- Profile Image -->
-          <div class="user-short-description-title">Marina Valentine</div>
+          <div class="user-short-description-title">{{ userInfo.first_name }} {{ userInfo.last_name }}</div>
           <div class="user-short-description-text" @click="redirect('missions')">Go to Missions</div>
         </div>
         <div class="social-links">
@@ -26,15 +26,15 @@
         </div>
         <div class="user-stats">
           <div class="user-stat big">
-            <p class="user-stat-title">25</p>
+            <p class="user-stat-title">{{ userInfo.spin_count }}</p>
             <p class="user-stat-text">Spin</p>
           </div>
           <div class="user-stat big">
-            <p class="user-stat-title">15</p>
+            <p class="user-stat-title">{{ userInfo.active_missions }}</p>
             <p class="user-stat-text">Mission</p>
           </div>
           <div class="user-stat big">
-            <p class="user-stat-title">7</p>
+            <p class="user-stat-title">{{ userInfo.completed_missions }}</p>
             <p class="user-stat-text">Completed</p>
           </div>
         </div>
@@ -82,9 +82,11 @@
 
 <script setup>
 import HexAvatar from '@/components/HexAvatar.vue';
-import { computed, ref } from "vue";
+import { computed, reactive, ref, onMounted } from "vue";
 import { useRouter } from 'vue-router';
+import { useCallApi } from '@/hooks/useCallApi';
 
+const { callApi } = useCallApi()
 const coverSrc = new URL('@/assets/img/cover/01.jpg', import.meta.url).href
 const avatarSrc = new URL('@/assets/img/avatar/29.jpg', import.meta.url).href
 const router = useRouter()
@@ -169,6 +171,21 @@ const tierClass = (key) => {
   if (key.startsWith('platinum')) return 'tier-platinum'
   return ''
 }
+
+const userInfo = reactive({});
+const getProfile = async () => {
+  try {    
+    const resp = await callApi("/member/profile-detail", "GET");
+    
+    Object.assign(userInfo, resp);
+  } catch (error) {
+    showError('Error', 'An unexpected error occurred while fetching profile.')
+  }
+}
+
+onMounted(() => {
+  getProfile()
+})
 </script>
 
 <style scoped>
@@ -330,5 +347,9 @@ const tierClass = (key) => {
     margin-top: 60px;
     scale: .8;
   }
+}
+
+.user-short-description-title {
+  color: #fff;
 }
 </style>
