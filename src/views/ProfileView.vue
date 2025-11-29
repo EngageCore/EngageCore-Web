@@ -106,14 +106,20 @@
 <script setup>
 import HexAvatar from '@/components/HexAvatar.vue';
 import { reactive, ref, computed, onMounted } from "vue";
+import { useUserStore } from '@/stores/user';
 import { useRouter } from 'vue-router';
 import { useCallApi } from '@/hooks/useCallApi';
+import { useNotification } from '@/composables/useNotification';
 
 const { callApi } = useCallApi();
 const router = useRouter();
+const { showSuccess, showError, showWarning, showConfirmation } = useNotification();
 
 // Avatar
 const avatarSrc = new URL('@/assets/img/avatar/29.jpg', import.meta.url).href;
+
+// User store
+const userStore = useUserStore();
 
 // =====================================
 // 1. Fetch Profile
@@ -121,8 +127,22 @@ const avatarSrc = new URL('@/assets/img/avatar/29.jpg', import.meta.url).href;
 const userInfo = reactive({});
 
 const getProfile = async () => {
-  const resp = await callApi("/member/profile-detail", "GET");
-  Object.assign(userInfo, resp);
+  try {
+    const resp = await callApi("/member/profile-detail", "GET");
+
+    if(resp) {
+      Object.assign(userInfo, resp);
+      userStore.updateUserInfo({
+        id: resp.id,
+        first_name: resp.first_name,
+        last_name: resp.last_name,
+        percentage_to_next_tier: resp.percentage_to_next_tier,
+        points_to_next_tier: resp.points_to_next_tier
+      });
+    }
+  } catch (error) {
+    showError('Error', 'An unexpected error occurred while fetching profile.')
+  }
 };
 
 // =====================================
@@ -131,8 +151,15 @@ const getProfile = async () => {
 const tierList = ref([]);
 
 const getTierList = async () => {
-  const resp = await callApi("/member/tiers", "GET");
-  tierList.value = resp.tiers || [];
+  try {
+    const resp = await callApi("/member/tiers", "GET");
+
+    if(resp) {
+      tierList.value = resp.tiers || [];
+    }
+  } catch (error) {
+    showError('Error', 'An unexpected error occurred while fetching tiers.')
+  }
 };
 
 // =====================================
