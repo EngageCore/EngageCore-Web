@@ -29,7 +29,7 @@ export const useCallApi = () => {
 
       // if (authStore.isAuthenticated) {
         // headers['Authorization'] = 'Bearer ' + localStorage.getItem("token");
-        headers['Authorization'] = 'Bearer ' + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZW1iZXJJZCI6ImI1MTM2YjliLWI1ZWEtNDdiMi1iNGFmLTdjY2E3N2ZlOTFkMiIsImJyYW5kSWQiOiIyZWNkNDYxOS1hM2Y3LTQ3OTgtOTg0MC0yODgwYjc3OWZiNmIiLCJyb2xlIjoibWVtYmVyIiwidHlwZSI6ImFjY2VzcyIsImp0aSI6IjMyYmNjZWE5MGNmMWI0NDQ4YjU5Y2Q2YzIxYzkwYzhmIiwiaWF0IjoxNzY0MzIwNDA0LCJleHAiOjE3NjQ0MDY4MDQsImF1ZCI6ImVuZ2FnZS1zZXJ2aWNlLXVzZXJzIiwiaXNzIjoiZW5nYWdlLXNlcnZpY2UifQ.xAVNrYzdcZqI02mren5QB_6tPbUqcYk-K8QWWg93Ww4";
+        headers['Authorization'] = 'Bearer ' + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZW1iZXJJZCI6ImI1MTM2YjliLWI1ZWEtNDdiMi1iNGFmLTdjY2E3N2ZlOTFkMiIsImJyYW5kSWQiOiIyZWNkNDYxOS1hM2Y3LTQ3OTgtOTg0MC0yODgwYjc3OWZiNmIiLCJyb2xlIjoibWVtYmVyIiwidHlwZSI6ImFjY2VzcyIsImp0aSI6ImMzNGRjNWFkYjBmNGEzNGYwYzhjYjUwYmRmMmFkOGNkIiwiaWF0IjoxNzY0NDA4MDcxLCJleHAiOjE3NjQ0OTQ0NzEsImF1ZCI6ImVuZ2FnZS1zZXJ2aWNlLXVzZXJzIiwiaXNzIjoiZW5nYWdlLXNlcnZpY2UifQ.5XEy0paUuHlql1QFaQK-bSM8V7YCwfzoiOON1mgpIT0";
       // }
 
       const response = await axios({

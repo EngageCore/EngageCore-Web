@@ -1,38 +1,35 @@
 <template>
   <div class="content-grid">
+
+    <!-- Profile -->
     <div class="profile-header">
       <div class="profile-header-cover"></div>
       <div class="profile-header-info">
         <div class="user-short-description big">
           <div class="user-avatar big user-short-description-avatar">
-            <HexAvatar :avatar="avatarSrc" :progress="userInfo.percentage_to_next_tier || 0" />
-          </div> <!-- Profile Image -->
-          <div class="user-short-description-title">{{ userInfo.first_name }} {{ userInfo.last_name }}</div>
-          <div class="user-short-description-text" @click="redirect('missions')">Go to Missions</div>
-        </div>
-        <div class="social-links">
-          <div href="#!" class="social-link">
-            <img src="@/assets/img/rank/bronzec-s.png" />
+            <HexAvatar :avatar="avatarSrc" :progress="userInfo.percentage_to_next_tier ?? 0" />
           </div>
-          <div href="#!" class="social-link">
-            <img src="@/assets/img/rank/silverc-s.png" />
+
+          <div class="user-short-description-title">
+            {{ userInfo.first_name }} {{ userInfo.last_name }}
           </div>
-          <div href="#!" class="social-link">
-            <img src="@/assets/img/rank/goldc-s.png" />
-          </div>
-          <div href="#!" class="social-link">
-            <img src="@/assets/img/rank/platinumc-s.png" />
+
+          <div class="user-short-description-text" @click="redirect('missions')">
+            Go to Missions
           </div>
         </div>
+
         <div class="user-stats">
           <div class="user-stat big">
             <p class="user-stat-title">{{ userInfo.spin_count }}</p>
             <p class="user-stat-text">Spin</p>
           </div>
+
           <div class="user-stat big">
             <p class="user-stat-title">{{ userInfo.active_missions }}</p>
             <p class="user-stat-text">Mission</p>
           </div>
+
           <div class="user-stat big">
             <p class="user-stat-title">{{ userInfo.completed_missions }}</p>
             <p class="user-stat-text">Completed</p>
@@ -41,6 +38,7 @@
       </div>
     </div>
 
+    <!-- Section header -->
     <div class="section-header">
       <div class="section-header-info">
         <p class="section-pretitle">Enjoy exclusive rewards!</p>
@@ -48,144 +46,166 @@
       </div>
     </div>
 
+    <!-- Membership Tier Cards -->
     <div class="grid grid-3-3-3-3 top-space centered">
-      <div class="badge-item-stat" v-for="(membership, idx) in membershipList" :key="membership.id"
-        :class="[{ locked: isLocked(idx), current: isCurrent(idx), achieved: isAchieved(idx) }, tierClass(membership.key)]">
-        <!-- Gray overlay when locked -->
-        <div class="badge-overlay" v-if="isLocked(idx)"></div>
+      
+      <div
+        v-for="(tier, index) in formattedTierList"
+        :key="tier.id"
+        class="badge-item-stat"
+        :class="{
+          locked: index > currentTierIdIndex,
+          achieved: index < currentTierIdIndex,
+          current: index === currentTierIdIndex
+        }"
+      >
+        <div class="badge-overlay" v-if="index > currentTierIdIndex"></div>
 
-        <img class="badge-item-stat-image" :src="getBadgeSrc(membership.key)" :alt="`badge-${membership.key}-b`" />
+        <img :src="tier.imgSrc" class="badge-item-stat-image" />
 
-        <p class="badge-item-stat-title">{{ membership.name }}</p>
+        <p class="badge-item-stat-title">{{ tier.name }}</p>
 
-        <p class="badge-item-stat-text">{{ membership.benefits }}</p>
+        <p class="badge-item-stat-text">{{ tier.luckyText }}</p>
+        <p class="badge-item-stat-text">{{ tier.rewardText }}</p>
 
         <div class="progress-stat">
           <div class="progress-stat-bar">
-            <div class="progress"
-              :style="{ '--percent': (membership.currentExp / membership.requiredExp) * 100 + '%' }"></div>
+            <div
+              class="progress"
+              :style="{ '--percent': (tier.currentExp / tier.requiredExp) * 100 + '%' }"
+            ></div>
           </div>
 
           <div class="bar-progress-wrap">
-            <p class="bar-progress-info negative center">
+            <p class="bar-progress-info center">
               <span class="bar-progress-text no-space">
-                {{ membership.currentExp >= membership.requiredExp ? 'Achieved' : membership.currentExp + ' / ' +
-                  membership.requiredExp }}
+
+                <template v-if="index < currentTierIdIndex">
+                  {{ tier.requiredExp }} / {{ tier.requiredExp }}
+                </template>
+
+                <template v-else-if="index === currentTierIdIndex">
+                  {{ tier.currentExp }} / {{ tier.requiredExp }}
+                </template>
+
+                <template v-else>
+                  Locked
+                </template>
+
               </span>
             </p>
           </div>
         </div>
+
       </div>
     </div>
+
   </div>
 </template>
 
 <script setup>
 import HexAvatar from '@/components/HexAvatar.vue';
-import { computed, reactive, ref, onMounted } from "vue";
+import { reactive, ref, computed, onMounted } from "vue";
 import { useRouter } from 'vue-router';
 import { useCallApi } from '@/hooks/useCallApi';
 
-const { callApi } = useCallApi()
-const coverSrc = new URL('@/assets/img/cover/01.jpg', import.meta.url).href
-const avatarSrc = new URL('@/assets/img/avatar/29.jpg', import.meta.url).href
-const router = useRouter()
+const { callApi } = useCallApi();
+const router = useRouter();
 
-const redirect = (path) => {
-  router.push({ name: path })
-}
+// Avatar
+const avatarSrc = new URL('@/assets/img/avatar/29.jpg', import.meta.url).href;
 
-const membershipList = ref([
-  {
-    id: "1",
-    key: "bronzec",
-    name: "Bronze-1",
-    requiredExp: 100,
-    currentExp: 100,
-    benefits:
-      "Daily Free Spin ×1 · 2% Shopping Rebate · Lucky Draw Entry ×1 · Basic Support",
-  },
-  {
-    id: "2",
-    key: "bronzec",
-    name: "Bronze-2",
-    requiredExp: 100,
-    currentExp: 100,
-    benefits:
-      "Daily Free Spin ×1 · 2% Shopping Rebate · Lucky Draw Entry ×1 · Basic Support",
-  },
-  {
-    id: "3",
-    key: "silverc",
-    name: "Silver-1",
-    requiredExp: 500,
-    currentExp: 500,
-    benefits:
-      "Daily Free Spin ×2 · 5% Shopping Rebate · Lucky Draw Entry ×2 · Priority Support",
-  },
-  {
-    id: "4",
-    key: "silverc",
-    name: "Silver-2",
-    requiredExp: 500,
-    currentExp: 500,
-    benefits:
-      "Daily Free Spin ×2 · 5% Shopping Rebate · Lucky Draw Entry ×2 · Priority Support",
-  },
-  {
-    id: "5",
-    key: "goldc",
-    name: "Gold",
-    requiredExp: 1000,
-    currentExp: 853,
-    benefits:
-      "Daily Free Spin ×3 · 10% Shopping Rebate · VIP Chatroom · Personal Manager",
-  },
-  {
-    id: "6",
-    key: "platinumc",
-    name: "Platinum",
-    requiredExp: 1500,
-    currentExp: 853,
-    benefits:
-      "Daily Free Spin ×5 · 15% Shopping Rebate · VIP Event Access · 1-on-1 Host Manager",
-  },
-]);
+// =====================================
+// 1. Fetch Profile
+// =====================================
+const userInfo = reactive({});
 
-const getBadgeSrc = (key) => {
-  return new URL(`../assets/img/rank/${key}-b.png`, import.meta.url).href;
+const getProfile = async () => {
+  const resp = await callApi("/member/profile-detail", "GET");
+  Object.assign(userInfo, resp);
 };
 
-// Index of first not-full level as current; if all full -> -1
-const currentIndex = computed(() => membershipList.value.findIndex(m => m.currentExp < m.requiredExp))
+// =====================================
+// 2. Fetch Tier List
+// =====================================
+const tierList = ref([]);
 
-const isCurrent = (idx) => currentIndex.value !== -1 && idx === currentIndex.value
-const isLocked = (idx) => currentIndex.value !== -1 && idx > currentIndex.value
-const isAchieved = (idx) => currentIndex.value === -1 ? true : idx < currentIndex.value
+const getTierList = async () => {
+  const resp = await callApi("/member/tiers", "GET");
+  tierList.value = resp.tiers || [];
+};
 
-// Tier class helper
-const tierClass = (key) => {
-  if (key.startsWith('bronze')) return 'tier-bronze'
-  if (key.startsWith('silver')) return 'tier-silver'
-  if (key.startsWith('gold')) return 'tier-gold'
-  if (key.startsWith('platinum')) return 'tier-platinum'
-  return ''
-}
+// =====================================
+// 3. Current Tier Index
+// =====================================
+const currentTierIdIndex = computed(() => {
+  if (!tierList.value.length || !userInfo.current_membership_tier_id) return -1;
+  return tierList.value.findIndex(t => t.id === userInfo.current_membership_tier_id);
+});
 
-const userInfo = reactive({});
-const getProfile = async () => {
-  try {    
-    const resp = await callApi("/member/profile-detail", "GET");
-    
-    Object.assign(userInfo, resp);
-  } catch (error) {
-    showError('Error', 'An unexpected error occurred while fetching profile.')
-  }
-}
+// =====================================
+// 4. Player total accumulated amount
+// =====================================
+const playerTotalAcc = computed(() => {
+  const idx = currentTierIdIndex.value;
+  if (idx < 0) return 0;
 
-onMounted(() => {
-  getProfile()
-})
+  const currentPoints = Number(userInfo.current_points || 0);
+
+  // Level 1 → 直接显示 current_points
+  if (idx === 0) return currentPoints;
+
+  // 其他等级 → 前一级满额 + 当前进度
+  const prevTier = tierList.value[idx - 1];
+  const prevTarget = Number(prevTier.accumulative_deposit_target_amount || 0);
+
+  return prevTarget + currentPoints;
+});
+
+// =====================================
+// 5. Format tiers for UI
+// =====================================
+const formattedTierList = computed(() => {
+  if (!tierList.value.length) return [];
+
+  return tierList.value.map((tier, index) => {
+    const required = Number(tier.accumulative_deposit_target_amount || 0);
+    let current;
+
+    if (index < currentTierIdIndex.value) {
+      current = required; // achieved
+    } else if (index === currentTierIdIndex.value) {
+      current = playerTotalAcc.value; // current progress
+    } else {
+      current = 0; // locked
+    }
+
+    const imgSrc = tier.image?.startsWith("data:image")
+      ? tier.image
+      : `data:image/png;base64,${tier.image || ""}`;
+
+    return {
+      ...tier,
+      requiredExp: required,
+      currentExp: current,
+      imgSrc,
+      luckyText: `Lucky Wheel ×${tier.lucky_wheel_multiplier}`,
+      rewardText: `Reward SGD ${tier.reward_amount}`
+    };
+  });
+});
+
+// =====================================
+// Navigation
+// =====================================
+const redirect = (path) => router.push({ name: path });
+
+// =====================================
+// Init
+// =====================================
+onMounted(async () => {
+  await Promise.all([getTierList(), getProfile()]);
+});
 </script>
 
 <style scoped>
@@ -352,4 +372,5 @@ onMounted(() => {
 .user-short-description-title {
   color: #fff;
 }
+
 </style>
