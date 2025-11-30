@@ -4,52 +4,57 @@
     <div class="section-header">
       <div class="section-header-info">
         <p class="section-pretitle">Your Accomplishments</p>
-        <h2 class="section-title">Quest History</h2>
+        <h2 class="section-title">Claim History</h2>
       </div>
     </div>
 
-    <!-- Filter Bar -->
+    <!-- Filters -->
     <div class="section-filters-bar v2">
       <form class="form">
         <div class="form-item split medium">
+
+          <!-- Source filter -->
           <div class="form-select">
-            <label for="quest-filter-show">Show</label>
-            <select id="quest-filter-show" v-model="filterShow">
-              <option value="all">All Quests</option>
-              <option value="completed">Completed Quests</option>
-              <option value="in-progress">In Progress</option>
+            <label>Source</label>
+            <select v-model="filterSource">
+              <option value="">All</option>
+              <option value="mission">Mission</option>
+              <option value="tier">Tier</option>
+              <option value="wheel">Wheel</option>
             </select>
             <svg class="form-select-icon icon-small-arrow">
               <use xlink:href="#svg-small-arrow"></use>
             </svg>
           </div>
 
+          <!-- Status filter -->
           <div class="form-select">
-            <label for="quest-filter-criteria">Filter By</label>
-            <select id="quest-filter-criteria" v-model="filterDifficulty">
-              <option value="all">All Difficulties</option>
-              <option value="gold">Gold</option>
-              <option value="silver">Silver</option>
+            <label>Status</label>
+            <select v-model="filterStatus">
+              <option value="">All</option>
+              <option value="approved">Claimed</option>
+              <option value="pending">Pending</option>
             </select>
             <svg class="form-select-icon icon-small-arrow">
               <use xlink:href="#svg-small-arrow"></use>
             </svg>
           </div>
 
+          <!-- Order filter -->
           <div class="form-select">
-            <label for="quest-filter-order">Order By</label>
-            <select id="quest-filter-order" v-model="filterOrder">
-              <option value="date-desc">Newest First</option>
-              <option value="date-asc">Oldest First</option>
-              <option value="exp-desc">EXP High → Low</option>
-              <option value="exp-asc">EXP Low → High</option>
+            <label>Order</label>
+            <select v-model="filterOrder">
+              <option value="desc">Newest</option>
+              <option value="asc">Oldest</option>
             </select>
             <svg class="form-select-icon icon-small-arrow">
               <use xlink:href="#svg-small-arrow"></use>
             </svg>
           </div>
 
-          <button type="button" class="button secondary" @click="applyFilters">Filter Quests</button>
+          <button type="button" class="button secondary" @click="applyFilters">
+            Apply
+          </button>
         </div>
       </form>
     </div>
@@ -58,136 +63,59 @@
     <div class="table table-quests split-rows">
       <div class="table-header">
         <div class="table-header-column">
-          <p class="table-header-title">Quest</p>
+          <p class="table-header-title">Source</p>
         </div>
         <div class="table-header-column">
           <p class="table-header-title">Description</p>
         </div>
         <div class="table-header-column centered padded-big-left">
-          <p class="table-header-title">Experience</p>
+          <p class="table-header-title">Reward</p>
+        </div>
+        <div class="table-header-column centered padded-big-left">
+          <p class="table-header-title">Status</p>
         </div>
         <div class="table-header-column padded-big-left">
-          <p class="table-header-title">Completed On</p>
+          <p class="table-header-title">Date</p>
         </div>
       </div>
 
       <div class="table-body same-color-rows">
-        <div class="table-row small quest-row" v-for="quest in paginatedQuests" :key="quest.title"
-          @click="openQuestModal(quest)">
+
+        <div class="table-row small" 
+             v-for="item in historyList" 
+             :key="item.id">
+          
           <div class="table-column">
-            <div class="table-information">
-              <img class="table-image" v-if="quest.difficulty === 'gold'" src="@/assets/img/quest/completedq-s.png"
-                alt="gold-badge" />
-              <img class="table-image" v-else src="@/assets/img/quest/openq-s.png" alt="silver-badge" />
-              <p class="table-title">{{ quest.title }}</p>
-            </div>
+            <p class="table-title capitalize">{{ item.source }}</p>
           </div>
+
           <div class="table-column">
-            <p class="table-text">{{ quest.description }}</p>
+            <p class="table-text">{{ item.description }}</p>
           </div>
+
           <div class="table-column centered padded-big-left">
             <p class="text-sticker void">
               <svg class="text-sticker-icon icon-plus-small">
                 <use xlink:href="#svg-plus-small"></use>
               </svg>
-              {{ quest.exp }} EXP
+              SGD {{ item.reward_amount }}
             </p>
           </div>
+
+          <div class="table-column centered padded-big-left">
+            <p class="table-text" v-if="item.status == 'pending'">Pending</p>
+            <p class="table-text" v-else>Claimed</p>
+          </div>
+
           <div class="table-column padded-big-left">
-            <p class="table-text">{{ formatDate(quest.completedAt) }}</p>
+            <p class="table-text">{{ formatDate(item.completed_at) }}</p>
           </div>
         </div>
 
-        <div v-if="paginatedQuests.length === 0" class="table-row">
-          <div class="table-column" style="grid-column: 1 / -1;">
+        <div v-if="historyList.length === 0" class="table-row no-records">
+          <div class="table-column full-width">
             <p class="table-text">No records found.</p>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Mobile Quest Cards (for very small screens) -->
-    <div class="mobile-quest-list">
-      <div class="mobile-quest-card" v-for="quest in paginatedQuests" :key="'mobile-' + quest.title"
-        @click="openQuestModal(quest)">
-        <div class="mobile-quest-header">
-          <img class="mobile-quest-badge" v-if="quest.difficulty === 'gold'" src="@/assets/img/quest/completedq-s.png"
-            alt="gold-badge" />
-          <img class="mobile-quest-badge" v-else src="@/assets/img/quest/openq-s.png" alt="silver-badge" />
-          <h4 class="mobile-quest-title">{{ quest.title }}</h4>
-        </div>
-        <p class="mobile-quest-description">{{ quest.description }}</p>
-        <div class="mobile-quest-footer">
-          <span class="mobile-quest-exp">+{{ quest.exp }} EXP</span>
-          <span class="mobile-quest-date">{{ formatDate(quest.completedAt) }}</span>
-        </div>
-      </div>
-
-      <div v-if="paginatedQuests.length === 0" class="mobile-quest-card">
-        <p class="mobile-quest-description">No records found.</p>
-      </div>
-    </div>
-
-    <!-- Quest Details Modal -->
-    <div v-if="showQuestModal" class="modal-overlay" @click="closeQuestModal">
-      <div class="popup-box small quest-details-modal" @click.stop>
-        <!-- Modal Header -->
-        <div class="popup-box-header">
-          <button class="popup-close-button" @click="closeQuestModal">
-            <svg class="popup-close-button-icon icon-cross">
-              <use xlink:href="#svg-cross"></use>
-            </svg>
-          </button>
-        </div>
-
-        <!-- Modal Content -->
-        <div class="popup-box-body">
-          <div class="popup-box-content">
-            <!-- Quest Badge -->
-            <div class="quest-modal-icon">
-              <img v-if="selectedQuest?.difficulty === 'gold'" src="@/assets/img/quest/completedq-b.png"
-                alt="Gold Quest Badge" class="quest-badge-icon" />
-              <img v-else src="@/assets/img/quest/openq-b.png" alt="Silver Quest Badge" class="quest-badge-icon" />
-            </div>
-
-            <!-- Quest Info -->
-            <div class="quest-modal-info">
-              <h3 class="popup-box-title">{{ selectedQuest?.title }}</h3>
-              <p class="popup-box-subtitle">
-                <span class="light">{{ selectedQuest?.description }}</span>
-              </p>
-            </div>
-
-            <!-- Quest Details -->
-            <div class="quest-modal-details">
-              <div class="detail-item">
-                <span class="detail-label">Experience Earned:</span>
-                <div class="reward-badge">
-                  <svg class="text-sticker-icon icon-plus-small">
-                    <use xlink:href="#svg-plus-small"></use>
-                  </svg>
-                  <span class="reward-amount">{{ selectedQuest?.exp }} EXP</span>
-                </div>
-              </div>
-
-              <div class="detail-item">
-                <span class="detail-label">Difficulty:</span>
-                <span class="difficulty-badge" :class="selectedQuest?.difficulty">
-                  {{ selectedQuest?.difficulty?.charAt(0).toUpperCase() + selectedQuest?.difficulty?.slice(1) }}
-                </span>
-              </div>
-
-              <div class="detail-item">
-                <span class="detail-label">Completed On:</span>
-                <span class="completion-date">{{ formatDate(selectedQuest?.completedAt) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Modal Actions -->
-        <div class="popup-box-actions">
-          <button class="button primary popup-box-action" @click="closeQuestModal">Close</button>
         </div>
       </div>
     </div>
@@ -195,19 +123,19 @@
     <!-- Pagination -->
     <div class="section-pager-bar" v-if="totalPages > 1">
       <div class="section-pager">
-        <a class="section-pager-item" :class="{ disabled: currentPage === 1 }" @click.prevent="prevPage">
+        <a class="section-pager-item" :class="{ disabled: page === 1 }" @click.prevent="prevPage">
           <svg class="section-pager-item-icon icon-small-arrow">
             <use xlink:href="#svg-small-arrow"></use>
           </svg>
         </a>
 
         <a v-for="p in pagesToShow" :key="p.key" class="section-pager-item"
-          :class="{ active: p.num === currentPage, disabled: p.ellipsis }"
+          :class="{ active: p.num === page, disabled: p.ellipsis }"
           @click.prevent="!p.ellipsis && goToPage(p.num)">
           <p class="section-pager-item-text">{{ p.ellipsis ? '…' : p.num }}</p>
         </a>
 
-        <a class="section-pager-item" :class="{ disabled: currentPage === totalPages }" @click.prevent="nextPage">
+        <a class="section-pager-item" :class="{ disabled: page === totalPages }" @click.prevent="nextPage">
           <svg class="section-pager-item-icon icon-small-arrow" style="transform: scaleX(-1);">
             <use xlink:href="#svg-small-arrow"></use>
           </svg>
@@ -218,97 +146,103 @@
 </template>
 
 <script setup>
-import { computed, ref, watchEffect } from 'vue'
+import { ref, computed, onMounted } from "vue";
+import { useCallApi } from "@/hooks/useCallApi";
 
-// Modal state management
-const showQuestModal = ref(false)
-const selectedQuest = ref(null)
+const { callApi } = useCallApi();
 
-// Modal functions
-const openQuestModal = (quest) => {
-  selectedQuest.value = quest
-  showQuestModal.value = true
-  document.body.style.overflow = 'hidden' // Prevent background scroll
-}
+const historyList = ref([]);
+const page = ref(1);
+const pageSize = 10;
+const total = ref(0);
 
-const closeQuestModal = () => {
-  showQuestModal.value = false
-  selectedQuest.value = null
-  document.body.style.overflow = 'auto' // Restore scroll
-}
+// Filters
+const filterSource = ref("");
+const filterStatus = ref("");
+const filterOrder = ref("desc");
 
-const quests = ref([
-  { title: "First Deposit", description: "Make your first deposit into your account", exp: 20, difficulty: "silver", status: "claimed", completedAt: "2025-08-12" },
-  { title: "Turnover King", description: "Achieve a total turnover of $50,000", exp: 100, difficulty: "gold", status: "claimed", completedAt: "2025-08-28" },
-  { title: "High Roller", description: "Deposit a total of $10,000", exp: 60, difficulty: "gold", status: "claimed", completedAt: "2025-09-03" },
-  { title: "Cash Out Pro", description: "Withdraw at least $5,000 in total", exp: 60, difficulty: "silver", status: "claimed", completedAt: "2025-09-05" },
-  { title: "Weekly Winner", description: "Deposit at least $2,000 in one week", exp: 50, difficulty: "silver", status: "claimed", completedAt: "2025-09-07" },
-])
+// Fetch history
+const fetchHistory = async () => {
+  const params = {
+    page: page.value,
+    pageSize,
+    order: filterOrder.value,
+  };
 
-const filterShow = ref('all')
-const filterDifficulty = ref('all')
-const filterOrder = ref('date-desc')
-const currentPage = ref(1)
-const pageSize = 5
+  if (filterSource.value) params.source = filterSource.value;
+  if (filterStatus.value) params.status = filterStatus.value;
 
-const filteredQuests = computed(() => {
-  let list = [...quests.value]
+  const resp = await callApi("/member/missions/history", "GET", null, params);
 
-  // 只允许 claimed 和 in-progress (只是保留结构，历史中几乎全是 claimed)
-  if (filterShow.value === 'completed') list = list.filter(q => q.status === 'claimed')
-  else if (filterShow.value === 'in-progress') list = list.filter(q => q.status === 'in-progress')
+  historyList.value = resp.list || [];
+  total.value = resp.total || 0;
+};
 
-  if (filterDifficulty.value !== 'all')
-    list = list.filter(q => q.difficulty === filterDifficulty.value)
+// Pagination helpers
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(total.value / pageSize))
+);
 
-  switch (filterOrder.value) {
-    case 'date-asc': list.sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt)); break
-    case 'exp-desc': list.sort((a, b) => b.exp - a.exp); break
-    case 'exp-asc': list.sort((a, b) => a.exp - b.exp); break
-    default: list.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+const goToPage = (p) => {
+  page.value = p;
+  fetchHistory();
+};
+
+const prevPage = () => {
+  if (page.value > 1) {
+    page.value--;
+    fetchHistory();
   }
-  return list
-})
+};
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredQuests.value.length / pageSize)))
-
-watchEffect(() => {
-  if (currentPage.value > totalPages.value) currentPage.value = totalPages.value
-})
-
-const paginatedQuests = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-  return filteredQuests.value.slice(start, start + pageSize)
-})
-
-const applyFilters = () => { currentPage.value = 1 }
-
-const goToPage = (p) => { currentPage.value = p }
-const prevPage = () => { if (currentPage.value > 1) currentPage.value-- }
-const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++ }
+const nextPage = () => {
+  if (page.value < totalPages.value) {
+    page.value++;
+    fetchHistory();
+  }
+};
 
 const pagesToShow = computed(() => {
-  const total = totalPages.value
-  const cur = currentPage.value
-  const items = []
-  if (total <= 7) {
-    for (let i = 1; i <= total; i++) items.push({ num: i, ellipsis: false, key: i })
-    return items
+  const totalP = totalPages.value;
+  const cur = page.value;
+  const items = [];
+
+  if (totalP <= 7) {
+    for (let i = 1; i <= totalP; i++) items.push({ num: i, ellipsis: false, key: i });
+    return items;
   }
-  items.push({ num: 1, ellipsis: false, key: 'p1' })
-  if (cur > 4) items.push({ ellipsis: true, key: 'l-ellipsis' })
-  const start = Math.max(2, cur - 1)
-  const end = Math.min(total - 1, cur + 1)
-  for (let i = start; i <= end; i++) items.push({ num: i, ellipsis: false, key: `p${i}` })
-  if (cur < total - 3) items.push({ ellipsis: true, key: 'r-ellipsis' })
-  items.push({ num: total, ellipsis: false, key: `p${total}` })
-  return items
-})
+
+  items.push({ num: 1, ellipsis: false, key: "p1" });
+  if (cur > 4) items.push({ ellipsis: true, key: "l-ellipsis" });
+
+  const start = Math.max(2, cur - 1);
+  const end = Math.min(totalP - 1, cur + 1);
+
+  for (let i = start; i <= end; i++)
+    items.push({ num: i, ellipsis: false, key: `p${i}` });
+
+  if (cur < totalP - 3) items.push({ ellipsis: true, key: "r-ellipsis" });
+  items.push({ num: totalP, ellipsis: false, key: `p${totalP}` });
+
+  return items;
+});
+
+// Reset page when filtering
+const applyFilters = () => {
+  page.value = 1;
+  fetchHistory();
+};
 
 const formatDate = (dateStr) => {
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-}
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+onMounted(fetchHistory);
 </script>
 
 <style scoped>
@@ -711,5 +645,15 @@ const formatDate = (dateStr) => {
   .quest-details-modal {
     max-width: 100%;
   }
+}
+
+.table-column.centered .text-sticker {
+  justify-content: center !important;
+}
+
+.table-row.no-records .full-width {
+  grid-column: 1 / -1 !important; /* 跨越所有 columns */
+  text-align: center;
+  padding: 20px 0;
 }
 </style>

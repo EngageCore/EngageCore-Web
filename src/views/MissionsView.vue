@@ -14,7 +14,7 @@
     </div>
 
     <div class="grid grid-3-3-3-3" :class="{'centered': questList.length > 3 }">
-      <div :class="['quest-item', { completed: quest.completed }]" v-for="(quest, index) in questList" :key="quest.id">
+      <div :class="['quest-item', { completed: quest.completed }]" v-for="(quest, index) in questList.filter(quest => !quest.completed).slice(0, 3)" :key="quest.id">
         <div class="quest-item-cover" :class="`cover-0${index + 1}`"></div>
 
         <p class="text-sticker small-text">
@@ -132,8 +132,7 @@
         <div class="table-row small" v-for="quest in questList" :key="quest.id">
           <div class="table-column">
             <div class="table-information">
-              <img class="table-image" v-if="quest.type === 'accumulate_deposit'" src="@/assets/img/quest/completedq-s.png" alt="gold-badge" />
-              <img class="table-image" v-else-if="quest.type === 'deposit'" src="@/assets/img/quest/openq-s.png" alt="silver-badge" />
+              <img :src="quest.imgSrc" class="table-image" style="width: 30px; height: 30px;" />
               <p class="table-title">{{ quest.name }}</p>
             </div>
           </div>
@@ -163,6 +162,7 @@
               </p>
             </div>
             <button v-else-if="quest.completed && quest.status === 'active'" @click="openClaimModal(quest)" class="button secondary">Claim Reward</button>
+            <button v-else-if="quest.status === 'pending'" class="button disabled" disabled>Pending</button>
             <button v-else class="button disabled" disabled>Claimed</button>
           </div>
         </div>
@@ -195,7 +195,7 @@
               <p class="popup-box-subtitle">
                 <span class="light">You have successfully completed:</span>
               </p>
-              <p class="quest-completed-title">{{ selectedQuest?.title }}</p>
+              <p class="quest-completed-title">{{ selectedQuest?.name }}</p>
             </div>
 
             <!-- Reward Info -->
@@ -204,9 +204,9 @@
                 <svg class="text-sticker-icon icon-plus-small">
                   <use xlink:href="#svg-plus-small"></use>
                 </svg>
-                <span class="reward-amount">{{ selectedQuest?.exp }} EXP</span>
+                <span class="reward-amount">SGD {{ selectedQuest?.reward_amount }}</span>
               </div>
-              <p class="reward-text">Experience points have been added to your account!</p>
+              <p class="reward-text">The reward will be credit to your account once approved.</p>
             </div>
           </div>
         </div>
@@ -249,34 +249,19 @@ const closeClaimModal = () => {
 }
 
 const claimReward = async () => {
-  if (selectedQuest.value) {
-    try {
-      // Close modal first
-      closeClaimModal()
+  try {
+    await callApi("/member/missions/claim", "POST", { mission_id: selectedQuest.value.id });
 
-      // Show processing notification
-      const loadingId = showWarning('Processing...', 'Claiming your reward, please wait.')
-
-      // Simulate API call delay
-      setTimeout(() => {
-        // Update quest status to claimed
-        // const questIndex = quests.value.findIndex(q => q.title === selectedQuest.value.title)
-        // if (questIndex !== -1) {
-        //   quests.value[questIndex].status = 'claimed'
-
-          // Show success notification
-          showSuccess(
-            'Reward Claimed!',
-            `You've earned ${selectedQuest.value.exp} EXP for completing "${selectedQuest.value.title}"`
-          )
-        // } else {
-          // showError('Error', 'Failed to claim reward. Please try again.')
-        // }
-      }, 1500)
-    } catch (error) {
-      showError('Error', 'An unexpected error occurred while claiming your reward.')
-      closeClaimModal()
-    }
+    showSuccess(
+      'Reward claim submitted!',
+      `You've submitted a claim for "${selectedQuest.value.name}".\nIt will credit into your account once approved.`
+    )
+    
+    getQuest();
+  } catch (error) {
+    showError('Error', 'An unexpected error occurred while fetching quests.')
+  } finally {
+    closeClaimModal()
   }
 };
 
@@ -299,7 +284,12 @@ const getQuest = async () => {
     
     const resp = await callApi("/member/missions", "GET", null, params);
     
-    questList.value = resp;
+    questList.value = resp.map(q => ({
+      ...q,
+      imgSrc: q.image?.startsWith('data:image')
+        ? q.image
+        : q.image
+    }));
   } catch (error) {
     showError('Error', 'An unexpected error occurred while fetching quests.')
   }
