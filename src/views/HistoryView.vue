@@ -78,13 +78,8 @@
           <p class="table-header-title">Date</p>
         </div>
       </div>
-
-      <div class="table-body same-color-rows">
-
-        <div class="table-row small" 
-             v-for="item in historyList" 
-             :key="item.id">
-          
+      <div class="table-body same-color-rows" v-if="historyList.length > 0">
+        <div class="table-row small" v-for="item in historyList" :key="item.id">
           <div class="table-column">
             <p class="table-title capitalize">{{ item.source }}</p>
           </div>
@@ -111,14 +106,16 @@
             <p class="table-text">{{ formatDate(item.completed_at) }}</p>
           </div>
         </div>
-
-        <div v-if="historyList.length === 0" class="table-row no-records">
-          <div class="table-column full-width">
-            <p class="table-text">No records found.</p>
-          </div>
-        </div>
       </div>
     </div>
+
+    <transition name="empty-fade">
+      <div v-if="historyList.length === 0" class="empty-state">
+        <div class="empty-card">
+          <span>No records found.</span>
+        </div>
+      </div>
+    </transition>
 
     <!-- Pagination -->
     <div class="section-pager-bar" v-if="totalPages > 1">
@@ -651,9 +648,46 @@ onMounted(fetchHistory);
   justify-content: center !important;
 }
 
-.table-row.no-records .full-width {
-  grid-column: 1 / -1 !important; /* 跨越所有 columns */
-  text-align: center;
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 20px 0;
+}
+
+.empty-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background-color: #293249;
+  border: 1px solid #2f3749;
+  color: #9aa4bf;
+  font-size: 0.95rem;
+  font-weight: 700;
+  box-shadow: 3px 5px 20px 0 rgba(0, 0, 0, .12);
+  width: 100%;
+}
+
+.empty-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.empty-fade-enter-active,
+.empty-fade-leave-active {
+  transition: opacity .25s ease, transform .25s ease;
+}
+.empty-fade-enter-from,
+.empty-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+@media screen and (max-width: 680px) {
+  .empty-state { padding: 14px 0; }
+  .empty-card { padding: 10px 14px; font-size: 0.9rem; }
 }
 </style>
