@@ -1,11 +1,12 @@
 import axios from 'axios';
 import { ref, computed } from 'vue';
+import { useUserStore } from '@/stores/user';
 // import { useLoadingStore } from '@/store/loadingStore'; 
 // import { useAuthStore } from '@/store/authStore'; 
 
 export const useCallApi = () => {
   // const loadingStore = useLoadingStore();
-  // const authStore = useAuthStore();
+  const userStore = useUserStore();
   const error = ref(null);
 
   const callApi = async (url, method = 'GET', data = null, params = null, isLoading = true) => {
@@ -27,10 +28,9 @@ export const useCallApi = () => {
         headers['Content-Type'] = 'application/json';
       }
 
-      // if (authStore.isAuthenticated) {
-        // headers['Authorization'] = 'Bearer ' + localStorage.getItem("token");
-        headers['Authorization'] = 'Bearer ' + "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZW1iZXJJZCI6ImI1MTM2YjliLWI1ZWEtNDdiMi1iNGFmLTdjY2E3N2ZlOTFkMiIsImJyYW5kSWQiOiIyZWNkNDYxOS1hM2Y3LTQ3OTgtOTg0MC0yODgwYjc3OWZiNmIiLCJyb2xlIjoibWVtYmVyIiwidHlwZSI6ImFjY2VzcyIsImp0aSI6ImMzNGRjNWFkYjBmNGEzNGYwYzhjYjUwYmRmMmFkOGNkIiwiaWF0IjoxNzY0NDA4MDcxLCJleHAiOjE3NjQ0OTQ0NzEsImF1ZCI6ImVuZ2FnZS1zZXJ2aWNlLXVzZXJzIiwiaXNzIjoiZW5nYWdlLXNlcnZpY2UifQ.5XEy0paUuHlql1QFaQK-bSM8V7YCwfzoiOON1mgpIT0";
-      // }
+      if (userStore.isAuthenticated) {
+        headers['Authorization'] = 'Bearer ' + localStorage.getItem("userToken");
+      }
 
       const response = await axios({
         // url: `${import.meta.env.VITE_API_URL}${url}`,
