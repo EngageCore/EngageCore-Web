@@ -4,5 +4,5 @@ WORKDIR /app
 COPY . .
 RUN npm install
 
-EXPOSE 8283
+EXPOSE 5173
 ENTRYPOINT ["npm","run","dev"]
