@@ -1,0 +1,87 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Generate version
+        id: version
+        run: |
+          # Generate version from commit SHA and timestamp
+          VERSION=$(git rev-parse --short HEAD)-$(date +%Y%m%d-%H%M%S)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Build Docker image
+        run: |
+          docker build -t engagecore-web:${{ steps.version.outputs.version }} \
+                       -t engagecore-web:${{ steps.version.outputs.short_sha }} \
+                       -t engagecore-web:latest .
+
+      - name: Save Docker image
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          docker save engagecore-web:$VERSION | gzip > engagecore-web-$VERSION.tar.gz
+          # Also save as latest for backward compatibility
+          docker save engagecore-web:latest | gzip > engagecore-web-latest.tar.gz
+          # Create version info file
+          echo "$VERSION" > VERSION.txt
+          echo "${{ steps.version.outputs.short_sha }}" > SHORT_SHA.txt
+
+      - name: Copy SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key.pem
+          chmod 600 ~/.ssh/ec2_key.pem
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          # Create directory on EC2 if it doesn't exist
+          ssh -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no \
+            ${EC2_USER}@${EC2_HOST} \
+            "mkdir -p /home/${EC2_USER}/engagecore-web"
+          
+          # Copy files to EC2
+          VERSION="${{ steps.version.outputs.version }}"
+          scp -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no \
+            engagecore-web-$VERSION.tar.gz \
+            engagecore-web-latest.tar.gz \
+            VERSION.txt \
+            SHORT_SHA.txt \
+            docker-compose.yml \
+            deploy.sh \
+            rollback.sh \
+            list-versions.sh \
+            ${EC2_USER}@${EC2_HOST}:/home/${EC2_USER}/engagecore-web/
+          
+          # Execute deployment script on EC2 with version
+          ssh -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no \
+            ${EC2_USER}@${EC2_HOST} \
+            "cd /home/${EC2_USER}/engagecore-web && chmod +x deploy.sh rollback.sh list-versions.sh && ./deploy.sh $VERSION"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f engagecore-web-*.tar.gz
+          rm -f VERSION.txt SHORT_SHA.txt
+          rm -f ~/.ssh/ec2_key.pem
+
