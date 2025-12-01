@@ -34,7 +34,7 @@ export const useCallApi = () => {
 
       const response = await axios({
         // url: `${import.meta.env.VITE_API_URL}${url}`,
-        url: `http://localhost:3000/api${url}`,
+        url: `http://13.214.183.187:3000/api${url}`,
         method,
         data,
         params, // Pass the query parameters here
@@ -44,7 +44,7 @@ export const useCallApi = () => {
       return response?.data?.message?.data;
     } catch (err) {
       if (url != '/auth/login' && err.response?.status === 401) {
-        authStore.logout();
+        //authStore.logout();
       }
       error.value = err.response ? err.response.data : err.message;
       throw err;
@@ -56,7 +56,7 @@ export const useCallApi = () => {
   };
 
   return {
-    loading: computed(() => loadingStore.isLoading),
+    //loading: computed(() => loadingStore.isLoading),
     error,
     callApi,
   };
