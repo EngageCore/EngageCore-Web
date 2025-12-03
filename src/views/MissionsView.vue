@@ -26,8 +26,7 @@
 
         <div class="quest-item-info">
           <div class="quest-item-badge">
-            <img v-if="quest.type === 'accumulate_deposit'" src="@/assets/img/quest/completedq-b.png" alt="gold-badge">
-            <img v-else src="@/assets/img/quest/openq-b.png" alt="silver-badge">
+            <img :src="quest.imgSrc" alt="gold-badge">
           </div>
 
           <p class="quest-item-title">{{ quest.name }}</p>
