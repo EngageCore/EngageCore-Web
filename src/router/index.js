@@ -46,38 +46,32 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
 
-  // ================================
-  // CASE 1: 入口 /
-  // ================================
+  const memberId = to.query.memberId
+  const slug = to.query.slug
+
+  if (memberId && slug) {
+    try {
+      await userStore.login(memberId, slug)
+
+      if (to.name === 'login-entry') {
+        return next({ name: 'profile' })
+      }
+
+      return next()
+    } catch (err) {
+      return next('/404')
+    }
+  }
+
   if (to.name === 'login-entry') {
-    // ✅ 已经登录：不管有没有 query，直接进 profile
     if (userStore.isAuthenticated) {
       return next({ name: 'profile' })
     }
 
-    // ❌ 未登录：必须带 memberId + slug
-    const memberId = to.query.memberId
-    const slug = to.query.slug
-
-    if (!memberId || !slug) {
-      return next('/404')
-    }
-
-    try {
-      await userStore.login(memberId, slug)
-      return next({ name: 'profile' })
-    } catch (err) {
-      return next('/404')
-    }
-  } else if (to.name === 'not-found') {
-    return next()
+    return next('/404')
   }
 
-  // ================================
-  // CASE 2: 内部页面必须已登录
-  // ================================
   if (!userStore.isAuthenticated) {
-    // 没登录，统一丢回 /
     return next({ name: 'login-entry' })
   }
 
