@@ -286,9 +286,7 @@ const getQuest = async () => {
     
     questList.value = resp.map(q => ({
       ...q,
-      imgSrc: q.image?.startsWith('data:image')
-        ? q.image
-        : q.image
+      imgSrc: `http://13.214.183.187:3000${q.image}`
     }));
   } catch (error) {
     showError('Error', 'An unexpected error occurred while fetching quests.')

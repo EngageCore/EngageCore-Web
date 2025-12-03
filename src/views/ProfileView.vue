@@ -196,9 +196,7 @@ const formattedTierList = computed(() => {
       current = 0; // locked
     }
 
-    const imgSrc = tier.image?.startsWith("data:image")
-      ? tier.image
-      : `data:image/png;base64,${tier.image || ""}`;
+    const imgSrc = `http://13.214.183.187:3000${tier.image}`;
 
     return {
       ...tier,
