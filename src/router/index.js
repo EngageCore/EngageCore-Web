@@ -49,30 +49,29 @@ router.beforeEach(async (to, from, next) => {
   const memberId = to.query.memberId
   const slug = to.query.slug
 
+  // 1. 完全放行 404，避免无限循环
+  if (to.name === 'not-found') {
+    return next()
+  }
+
+  // 2. 有 memberId + slug → 执行 login
   if (memberId && slug) {
     try {
       await userStore.login(memberId, slug)
-
-      if (to.name === 'login-entry') {
-        return next({ name: 'profile' })
-      }
-
-      return next()
+      return next({ name: 'profile' })
     } catch (err) {
       return next('/404')
     }
   }
 
-  if (to.name === 'login-entry') {
-    if (userStore.isAuthenticated) {
-      return next({ name: 'profile' })
-    }
-
+  // 3. 没有登陆 → 第一次进入 → 跳 404（这是你想要的行为）
+  if (!userStore.isAuthenticated) {
     return next('/404')
   }
 
-  if (!userStore.isAuthenticated) {
-    return next({ name: 'login-entry' })
+  // 4. 已登陆访问 login-entry → 跳 profile
+  if (to.name === 'login-entry') {
+    return next({ name: 'profile' })
   }
 
   return next()
