@@ -1,10 +1,26 @@
 import { apiGet, apiPost } from './api.js'
 
 export const wheelService = {
-  // Get wheel status and configuration
-  async getWheelStatus() {
+  // Get active wheels for member
+  async getActiveWheels() {
     try {
-      const response = await apiGet('/wheel/status')
+      const response = await apiGet('/member/wheels/active')
+      return {
+        success: true,
+        data: response
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  },
+
+  // Get wheel items for a specific wheel
+  async getWheelItems(wheelId) {
+    try {
+      const response = await apiGet(`/member/wheels/${wheelId}/items`)
       return {
         success: true,
         data: response
@@ -18,9 +34,9 @@ export const wheelService = {
   },
 
   // Spin the wheel
-  async spin() {
+  async spinWheel(wheelId) {
     try {
-      const response = await apiPost('/wheel/spin')
+      const response = await apiPost(`/member/wheels/${wheelId}/spin`)
       return {
         success: true,
         data: response
@@ -33,28 +49,12 @@ export const wheelService = {
     }
   },
 
-  // Get spin history
-  async getSpinHistory(page = 1, limit = 10) {
+  // Get spin history for a specific wheel
+  async getSpinHistory(wheelId, page = 1, limit = 10) {
     try {
       const response = await apiGet(
-        `/wheel/history?page=${page}&limit=${limit}`
+        `/member/wheels/${wheelId}/history?page=${page}&limit=${limit}`
       )
-      return {
-        success: true,
-        data: response
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      }
-    }
-  },
-
-  // Get wheel prizes configuration
-  async getWheelPrizes() {
-    try {
-      const response = await apiGet('/wheel/prizes')
       return {
         success: true,
         data: response

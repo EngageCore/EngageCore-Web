@@ -72,10 +72,22 @@
             </div>
           </div>
 
+          <!-- Loading State -->
+          <div v-if="loading && !currentWheel" class="loading-state">
+            <div class="loading-spinner"></div>
+            <p>Loading wheel...</p>
+          </div>
+
+          <!-- Error State -->
+          <div v-if="error && !currentWheel" class="error-state">
+            <p>{{ error }}</p>
+            <button @click="fetchActiveWheels" class="retry-btn">Retry</button>
+          </div>
+
           <!-- Simple Spin Button -->
-          <div class="spin-button-area">
+          <div v-if="currentWheel" class="spin-button-area">
             <button class="spin-btn" :class="{ 'spinning': isSpinning, 'disabled': spinsLeft <= 0 }"
-              :disabled="isSpinning || spinsLeft <= 0" @click="onStart">
+              :disabled="isSpinning || spinsLeft <= 0 || loading" @click="onStart">
               {{ isSpinning ? 'SPINNING...' : `SPIN (${spinsLeft})` }}
             </button>
 
@@ -88,7 +100,7 @@
 
         <!-- Winning History Panel -->
         <div class="winning-panel-container">
-          <WinningHistoryPanel />
+          <WinningHistoryPanel v-if="currentWheel" :wheelId="currentWheel.id" />
         </div>
       </div>
     </div>
@@ -100,13 +112,13 @@ import InteractiveBackground from '@/components/wheel/InteractiveBackground.vue'
 import WinningHistoryPanel from '@/components/wheel/WinningHistoryPanel.vue'
 import WinningModal from '@/components/wheel/WinningModal.vue'
 import { useSoundEffects } from '@/composables/useSoundEffects'
+import { useCallApi } from '@/hooks/useCallApi'
+import { useNotification } from '@/composables/useNotification'
 import { computed, onMounted, onUnmounted, ref } from "vue"
 
 //#region 基础配置
 const DESKTOP_WHEEL_SIZE = "500px"
 const MOBILE_WHEEL_SIZE = "320px"
-const INIT_SPINS = 3
-const ICONS = ["💰", "👑", "🎲", "🎰", "🎁", "⭐", "🔥", "🍀"]
 
 // 静态资源
 import segmentsSvg from '@/assets/img/wheel/wheel-8-segments.svg'
@@ -115,15 +127,24 @@ import frameSvg from '@/assets/img/wheel/wheel-frame.svg'
 import pointerSvg from '@/assets/img/wheel/wheel-pointer.svg'
 //#endregion
 
+//#region API & Notifications
+const { callApi } = useCallApi()
+const { showSuccess, showError } = useNotification()
+//#endregion
+
 //#region 状态管理
 const myLucky = ref(null)
 const isSpinning = ref(false)
-const spinsLeft = ref(INIT_SPINS)
+const spinsLeft = ref(0)
 const windowWidth = ref(window.innerWidth)
 const showCelebration = ref(false)
 const celebrationType = ref('default')
 const showWinModal = ref(false)
 const lastPrize = ref(null)
+const currentWheel = ref(null)
+const wheelItems = ref([])
+const loading = ref(false)
+const error = ref(null)
 
 // Sound effects
 const {
@@ -151,22 +172,174 @@ const blocks = [
   { padding: "0px", background: "transparent", imgs: [{ src: frameSvg, width: "100%", height: "100%", top: "0%", left: "0%" }] },
 ]
 
-const prizes = computed(() => ICONS.map(icon => ({
-  background: "transparent",
-  borderColor: "#d4af37",
-  borderWidth: 2,
-  borderRadius: "0px",
-  radius: "60%",
-  range: 30,
-  fonts: [
-    {
-      text: icon,
-      fontColor: "#000",
-      fontSize: windowWidth.value < 768 ? "20px" : "26px",
-      top: "40%"
+// Map wheel items to prizes format (matching BackOffice structure)
+const prizes = computed(() => {
+  if (!wheelItems.value || wheelItems.value.length === 0) {
+    return []
+  }
+  
+  // Filter only active items and sort by position (matching BackOffice behavior)
+  const activeItems = wheelItems.value
+    .filter(item => item.active !== false)
+    .sort((a, b) => (a.position || 0) - (b.position || 0))
+  
+  if (activeItems.length === 0) {
+    return []
+  }
+  
+  const totalItems = activeItems.length
+  const range = 360 / totalItems
+  
+  // Dynamic sizing based on number of segments
+  // More segments = smaller fonts, less segments = larger fonts
+  const getFontSize = (baseSize, isMobile = false) => {
+    const multiplier = totalItems <= 4 ? 1.2 : totalItems <= 6 ? 1.0 : totalItems <= 8 ? 0.85 : 0.7
+    const size = isMobile ? baseSize * 0.7 : baseSize
+    return `${(size * multiplier).toFixed(0)}px`
+  }
+  
+  // Calculate dynamic positioning based on segment count
+  const getPositioning = () => {
+    if (totalItems <= 4) {
+      return { iconTop: '20%', nameTop: '50%', typeTop: '75%' }
+    } else if (totalItems <= 6) {
+      return { iconTop: '22%', nameTop: '48%', typeTop: '72%' }
+    } else if (totalItems <= 8) {
+      return { iconTop: '25%', nameTop: '50%', typeTop: '70%' }
+    } else {
+      return { iconTop: '28%', nameTop: '52%', typeTop: '68%' }
     }
-  ]
-})))
+  }
+  
+  const positions = getPositioning()
+  
+  return activeItems.map((item, index) => {
+    // Determine display content: prefer image, then icon, then default
+    const hasImage = item.image && item.image.trim() !== ''
+    const displayIcon = item.icon || "🎁" // Icon is already converted to emoji in fetchWheelItems
+    
+    // Alternating background colors for better visibility
+    const isEven = index % 2 === 0
+    const backgroundColor = isEven 
+      ? "rgba(122, 77, 246, 0.15)" // Light purple
+      : "rgba(212, 175, 55, 0.15)" // Light gold
+    
+    // Build prize configuration using items from API
+    const prizeConfig = {
+      background: backgroundColor,
+      borderColor: "#d4af37",
+      borderWidth: 2,
+      borderRadius: "0px",
+      radius: "60%",
+      range: range,
+      // Store full item data for reference (using API response structure)
+      itemData: {
+        id: item.id,
+        name: item.name,
+        type: item.type || 'points',
+        value: item.value || 0,
+        probability: item.probability || 0, // Backend: 0-1
+        prize_total_limit: item.prize_total_limit,
+        prize_daily_limit: item.prize_daily_limit,
+        icon: item.icon, // Already converted to emoji
+        image: item.image,
+        description: item.description,
+        active: item.active,
+        position: item.position !== undefined ? item.position : index
+      }
+    }
+    
+    // Build fonts array to display icon, name, and type
+    const fonts = []
+    const isMobile = windowWidth.value < 768
+    
+    // If item has an image, use it; otherwise use icon/emoji
+    if (hasImage) {
+      // Use image if available
+      prizeConfig.imgs = [{
+        src: item.image,
+        width: totalItems <= 4 ? "50%" : totalItems <= 6 ? "55%" : "60%",
+        height: totalItems <= 4 ? "50%" : totalItems <= 6 ? "55%" : "60%",
+        top: "8%",
+        left: "20%"
+      }]
+      // Show icon at top
+      if (displayIcon) {
+        fonts.push({
+          text: displayIcon,
+          fontColor: "#FFFFFF",
+          fontSize: getFontSize(isMobile ? 16 : 20, isMobile),
+          fontWeight: "bold",
+          top: "3%",
+          textShadow: "2px 2px 4px rgba(0, 0, 0, 0.8)"
+        })
+      }
+      // Show name below image
+      if (item.name) {
+        fonts.push({
+          text: item.name,
+          fontColor: "#FFFFFF",
+          fontSize: getFontSize(isMobile ? 12 : 16, isMobile),
+          fontWeight: "bold",
+          top: "68%",
+          textShadow: "2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(122, 77, 246, 0.6)"
+        })
+      }
+      // Show type at bottom
+      if (item.type) {
+        fonts.push({
+          text: item.type.toUpperCase(),
+          fontColor: "#FFD700",
+          fontSize: getFontSize(isMobile ? 10 : 12, isMobile),
+          fontWeight: "600",
+          top: "82%",
+          textShadow: "1px 1px 3px rgba(0, 0, 0, 0.8)"
+        })
+      }
+    } else {
+      // Show icon at top with enhanced visibility
+      if (displayIcon) {
+        fonts.push({
+          text: displayIcon,
+          fontColor: "#FFFFFF",
+          fontSize: getFontSize(isMobile ? 28 : 36, isMobile),
+          fontWeight: "bold",
+          top: positions.iconTop,
+          textShadow: "3px 3px 6px rgba(0, 0, 0, 0.9), 0 0 10px rgba(122, 77, 246, 0.5)"
+        })
+      }
+      // Show name in middle with better contrast
+      if (item.name) {
+        fonts.push({
+          text: item.name,
+          fontColor: "#FFFFFF",
+          fontSize: getFontSize(isMobile ? 14 : 18, isMobile),
+          fontWeight: "bold",
+          top: positions.nameTop,
+          textShadow: "2px 2px 5px rgba(0, 0, 0, 0.9), 0 0 8px rgba(122, 77, 246, 0.6)"
+        })
+      }
+      // Show type at bottom with gold accent
+      if (item.type) {
+        fonts.push({
+          text: item.type.toUpperCase(),
+          fontColor: "#FFD700",
+          fontSize: getFontSize(isMobile ? 11 : 14, isMobile),
+          fontWeight: "700",
+          top: positions.typeTop,
+          textShadow: "2px 2px 4px rgba(0, 0, 0, 0.9), 0 0 6px rgba(255, 215, 0, 0.4)"
+        })
+      }
+    }
+    
+    // Assign fonts array if we have any
+    if (fonts.length > 0) {
+      prizeConfig.fonts = fonts
+    }
+    
+    return prizeConfig
+  })
+})
 
 const buttons = [
   {
@@ -179,14 +352,100 @@ const buttons = [
 ]
 //#endregion
 
+//#region API Functions
+const fetchActiveWheels = async () => {
+  try {
+    loading.value = true
+    error.value = null
+    const response = await callApi('/member/wheels/active', 'GET')
+    
+    if (response && response.wheels && response.wheels.length > 0) {
+      // Use the first active wheel
+      currentWheel.value = response.wheels[0]
+      await fetchWheelItems(currentWheel.value.id)
+      
+      // Update spins left based on eligibility
+      if (currentWheel.value.eligibility) {
+        spinsLeft.value = currentWheel.value.eligibility.spins_remaining || 0
+      }
+    } else {
+      error.value = 'No active wheels available'
+      showError('No Wheels Available', 'There are no active wheels at this time.')
+    }
+  } catch (err) {
+    error.value = err.message || 'Failed to fetch active wheels'
+    showError('Error', 'Failed to load wheels. Please try again later.')
+  } finally {
+    loading.value = false
+  }
+}
+
+// Icon mapping for string icons to emojis
+const iconMap = {
+  'coin': '🪙',
+  'diamond': '💎',
+  'star': '⭐',
+  'trophy': '🏆',
+  'gift': '🎁',
+  'crown': '👑',
+  'money': '💰',
+  'gem': '💠',
+  'medal': '🥇',
+  'prize': '🎁'
+}
+
+const getIconDisplay = (icon) => {
+  if (!icon) return '🎁'
+  // If it's already an emoji, return it
+  if (/[\u{1F300}-\u{1F9FF}]/u.test(icon)) {
+    return icon
+  }
+  // Map string icons to emojis
+  return iconMap[icon.toLowerCase()] || icon || '🎁'
+}
+
+const fetchWheelItems = async (wheelId) => {
+  try {
+    loading.value = true
+    const response = await callApi(`/member/wheels/${wheelId}/items`, 'GET')
+    
+    if (response && response.wheel && response.wheel.items) {
+      // Use items directly from API response
+      wheelItems.value = response.wheel.items
+        .map(item => ({
+          // Map all fields from API response
+          id: item.id,
+          name: item.name || '',
+          type: item.type || 'points',
+          value: parseFloat(item.value) || 0,
+          probability: parseFloat(item.probability) || 0, // Backend: 0-1
+          prize_total_limit: item.prize_total_limit,
+          prize_daily_limit: item.prize_daily_limit,
+          icon: getIconDisplay(item.icon), // Convert icon string to emoji if needed
+          image: item.image || '',
+          description: item.description || '',
+          active: item.active !== false, // Default to true if not specified
+          position: item.position !== undefined ? item.position : 0
+        }))
+        .filter(item => item.active) // Only show active items
+        .sort((a, b) => (a.position || 0) - (b.position || 0)) // Sort by position
+    }
+  } catch (err) {
+    error.value = err.message || 'Failed to fetch wheel items'
+    showError('Error', 'Failed to load wheel items. Please try again later.')
+  } finally {
+    loading.value = false
+  }
+}
+//#endregion
+
 //#region 游戏逻辑
-const onStart = () => {
-  if (spinsLeft.value <= 0) return
+const onStart = async () => {
+  if (spinsLeft.value <= 0 || !currentWheel.value || isSpinning.value) return
 
   // Play button click sound
   playButtonClick()
 
-  spinsLeft.value--
   isSpinning.value = true
   showCelebration.value = false
   showWinModal.value = false
@@ -200,15 +459,76 @@ const onStart = () => {
   // Start spinning sound
   playSpinSound()
 
-  myLucky.value.play()
-  const targetIndex = Math.floor(Math.random() * prizes.value.length)
-  setTimeout(() => { myLucky.value.stop(targetIndex) }, 4000)
+  try {
+    // Call spin API
+    const response = await callApi(`/member/wheels/${currentWheel.value.id}/spin`, 'POST')
+    
+      if (response && response.winning_item) {
+        const winningItem = response.winning_item
+        
+        // Find the index of the winning item in the prizes array
+        const winningIndex = prizes.value.findIndex(
+          prize => prize.itemData && prize.itemData.id === winningItem.id
+        )
+        
+        if (winningIndex !== -1) {
+          // Start the wheel animation
+          myLucky.value.play()
+          
+          // Stop at the winning index after animation
+          setTimeout(() => {
+            myLucky.value.stop(winningIndex)
+          }, 4000)
+          
+          // Decrement spins (will be updated after refetch)
+          spinsLeft.value = Math.max(0, spinsLeft.value - 1)
+        } else {
+          // Fallback: use random index if item not found
+          console.warn('Winning item not found in prizes, using random index')
+          myLucky.value.play()
+          const randomIndex = Math.floor(Math.random() * prizes.value.length)
+          setTimeout(() => { myLucky.value.stop(randomIndex) }, 4000)
+          spinsLeft.value = Math.max(0, spinsLeft.value - 1)
+        }
+      } else {
+        throw new Error('Invalid response from spin API')
+      }
+  } catch (err) {
+    isSpinning.value = false
+    stopSpinSound()
+    const wheelWrapper = document.querySelector('.wheel-wrapper')
+    if (wheelWrapper) {
+      wheelWrapper.classList.remove('spinning')
+    }
+    showError('Spin Failed', err.message || 'Failed to spin the wheel. Please try again.')
+  }
 }
 
 const onEnd = (prize) => {
   isSpinning.value = false
-  const prizeIcon = prize.fonts[0].text
-  lastPrize.value = prizeIcon
+  
+  // Get prize data (matching BackOffice structure)
+  const prizeData = prize.itemData || {}
+  const prizeIcon = prize.fonts[0]?.text || prizeData.icon || '🎁'
+  const prizeName = prizeData.name || 'Prize'
+  const prizeValue = prizeData.value || 0
+  const prizeType = prizeData.type || 'points'
+  const prizeDescription = prizeData.description || ''
+  
+  // Store full prize information matching BackOffice fields
+  lastPrize.value = {
+    id: prizeData.id,
+    icon: prizeIcon,
+    name: prizeName,
+    type: prizeType,
+    value: prizeValue,
+    description: prizeDescription,
+    image: prizeData.image,
+    // Include all BackOffice fields for reference
+    prize_total_limit: prizeData.prize_total_limit,
+    prize_daily_limit: prizeData.prize_daily_limit,
+    probability: prizeData.probability
+  }
 
   // Stop spinning sound
   stopSpinSound()
@@ -219,10 +539,10 @@ const onEnd = (prize) => {
     wheelWrapper.classList.remove('spinning')
   }
 
-  // Determine celebration type based on prize
-  if (prizeIcon === '👑' || prizeIcon === '💰') {
+  // Determine celebration type based on prize value or type
+  if (prizeValue >= 500 || prizeIcon === '👑' || prizeIcon === '💰') {
     celebrationType.value = 'jackpot'
-  } else if (prizeIcon === '🎰' || prizeIcon === '⭐') {
+  } else if (prizeValue >= 100 || prizeIcon === '🎰' || prizeIcon === '⭐') {
     celebrationType.value = 'big-win'
   } else {
     celebrationType.value = 'default'
@@ -247,12 +567,23 @@ const onEnd = (prize) => {
   setTimeout(() => {
     showCelebration.value = false
   }, 3800)
+  
+  // Refresh wheel data to update spins remaining
+  if (currentWheel.value) {
+    fetchActiveWheels()
+  }
 }
 
 const closeWinModal = () => {
   showWinModal.value = false
 }
 
+//#endregion
+
+//#region Lifecycle
+onMounted(() => {
+  fetchActiveWheels()
+})
 //#endregion
 </script>
 
@@ -879,6 +1210,52 @@ const closeWinModal = () => {
   font-size: 14px;
   color: #888;
   font-weight: 500;
+}
+
+/* Loading and Error States */
+.loading-state,
+.error-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(122, 77, 246, 0.3);
+  border-top-color: rgba(122, 77, 246, 1);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-state {
+  color: rgba(255, 107, 107, 0.9);
+}
+
+.retry-btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #7a4df6 0%, #4a1f9e 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.retry-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(122, 77, 246, 0.4);
 }
 
 /* Winning Panel */

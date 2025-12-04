@@ -14,8 +14,14 @@
         <div class="celebration-icon">🎉</div>
         <h2 class="win-title">Congratulations!</h2>
         <div class="prize-display">
-          <div class="prize-icon">{{ prize }}</div>
-          <p class="prize-text">You won: <span class="prize-name">{{ getPrizeName(prize) }}</span></p>
+          <!-- Show image if available, otherwise show icon -->
+          <div v-if="prizeImage" class="prize-image-container">
+            <img :src="prizeImage" :alt="prizeName" class="prize-image" />
+          </div>
+          <div v-else class="prize-icon">{{ prizeIcon }}</div>
+          <p class="prize-text">You won: <span class="prize-name">{{ prizeName }}</span></p>
+          <p v-if="prizeValue > 0" class="prize-value">{{ prizeValue }} {{ prizeTypeLabel }}</p>
+          <p v-if="prizeDescription" class="prize-description">{{ prizeDescription }}</p>
         </div>
       </div>
 
@@ -33,10 +39,11 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 
 const props = defineProps({
   prize: {
-    type: String,
+    type: [String, Object],
     required: true
   },
   celebrationType: {
@@ -50,6 +57,57 @@ const emit = defineEmits(['close'])
 const closeModal = () => {
   emit('close')
 }
+
+// Handle both string (icon) and object (full prize data) formats
+const prizeIcon = computed(() => {
+  if (typeof props.prize === 'string') {
+    return props.prize
+  }
+  return props.prize?.icon || props.prize?.prizeIcon || '🎁'
+})
+
+const prizeName = computed(() => {
+  if (typeof props.prize === 'string') {
+    return getPrizeName(props.prize)
+  }
+  return props.prize?.name || props.prize?.prizeName || 'Special Prize'
+})
+
+const prizeValue = computed(() => {
+  if (typeof props.prize === 'object') {
+    return props.prize?.value || props.prize?.prizeValue || 0
+  }
+  return 0
+})
+
+const prizeType = computed(() => {
+  if (typeof props.prize === 'object') {
+    return props.prize?.type || 'points'
+  }
+  return 'points'
+})
+
+const prizeTypeLabel = computed(() => {
+  const type = prizeType.value
+  if (type === 'points') return 'Points'
+  if (type === 'voucher') return 'Voucher'
+  if (type === 'item') return 'Item'
+  return type.charAt(0).toUpperCase() + type.slice(1)
+})
+
+const prizeImage = computed(() => {
+  if (typeof props.prize === 'object') {
+    return props.prize?.image || null
+  }
+  return null
+})
+
+const prizeDescription = computed(() => {
+  if (typeof props.prize === 'object') {
+    return props.prize?.description || ''
+  }
+  return ''
+})
 
 const getPrizeName = (prizeIcon) => {
   const prizeNames = {
@@ -175,6 +233,33 @@ const getConfettiStyle = (n) => {
   color: #7a4df6;
   font-weight: bold;
   font-size: 20px;
+}
+
+.prize-value {
+  color: #FFD700;
+  font-weight: bold;
+  font-size: 24px;
+  margin-top: 10px;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.prize-image-container {
+  margin-bottom: 15px;
+}
+
+.prize-image {
+  max-width: 120px;
+  max-height: 120px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(122, 77, 246, 0.3);
+  animation: prizeGlow 2s ease-in-out infinite;
+}
+
+.prize-description {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 10px;
+  font-style: italic;
 }
 
 .celebration-effects {

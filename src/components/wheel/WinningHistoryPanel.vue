@@ -15,16 +15,37 @@
       </button>
     </div>
 
-    <!-- Winning History List -->
-    <div class="history-list">
-      <div v-for="(win, index) in displayedWins" :key="index" class="history-item" :class="{ 'big-win': win.isBigWin }">
-        <div class="win-date">{{ win.date }}</div>
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-state">
+      <p>Loading history...</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-if="error && !loading" class="error-state">
+      <p>{{ error }}</p>
+    </div>
+
+    <!-- Empty State -->
+    <div v-if="!loading && !error && displayedWins.length === 0" class="empty-state">
+      <p>No spin history available yet.</p>
+    </div>
+
+      <!-- Winning History List -->
+    <div v-if="!loading && !error" class="history-list">
+      <div v-for="(win, index) in displayedWins" :key="win.id || index" class="history-item" :class="{ 'big-win': win.isBigWin }">
+        <div class="win-date">{{ formatDate(win.spun_at || win.created_at) }}</div>
         <div class="win-details">
           <div class="player-info">
-            <span class="player-name">{{ win.playerName }}</span>
+            <span class="player-name">{{ win.member_name || win.playerName || 'Player' }}</span>
             <div class="win-amount">
-              <span class="prize-icon">{{ win.prize }}</span>
-              <span class="points">{{ win.points }} Points</span>
+              <span class="prize-icon">{{ win.winning_item?.icon || win.item_icon || win.prize || '🎁' }}</span>
+              <div class="prize-info">
+                <span class="prize-name-text">{{ win.winning_item?.name || win.item_name || 'Prize' }}</span>
+                <span v-if="win.winning_item?.value || win.item_value" class="points">
+                  {{ win.winning_item?.value || win.item_value || 0 }} 
+                  {{ getPrizeTypeLabel(win.winning_item?.type || win.item_type) }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -36,29 +57,119 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
+import { useCallApi } from '@/hooks/useCallApi'
 
+const props = defineProps({
+  wheelId: {
+    type: String,
+    required: true
+  }
+})
+
+const { callApi } = useCallApi()
 const activeTab = ref('recent')
+const loading = ref(false)
+const error = ref(null)
 
-// Mock data for winning history
-const recentWins = ref([
-  { date: '2025-09-12', playerName: 'MYR 8.78', prize: '💰', points: 250, isBigWin: true },
-  { date: '2025-09-12', playerName: 'j*****', prize: '👑', points: 250, isBigWin: true },
-  { date: '2025-09-12', playerName: 'j*****', prize: '🎰', points: 250, isBigWin: false },
-  { date: '2025-09-12', playerName: 'j*****', prize: '🎁', points: 250, isBigWin: false },
-  { date: '2025-09-12', playerName: 'j*****', prize: '⭐', points: 250, isBigWin: false },
-  { date: '2025-09-12', playerName: 'j*****', prize: '🔥', points: 250, isBigWin: false },
-  { date: '2025-09-12', playerName: 'j*****', prize: '🍀', points: 250, isBigWin: false }
-])
+// Spin history data
+const recentWins = ref([])
+const topWins = ref([])
 
-const topWins = ref([
-  { date: '2025-09-10', playerName: 'Player1', prize: '👑', points: 500, isBigWin: true },
-  { date: '2025-09-11', playerName: 'Player2', prize: '💰', points: 450, isBigWin: true },
-  { date: '2025-09-12', playerName: 'Player3', prize: '🎰', points: 400, isBigWin: true }
-])
+// Fetch spin history
+const fetchSpinHistory = async () => {
+  if (!props.wheelId) return
+  
+  try {
+    loading.value = true
+    error.value = null
+    
+    const response = await callApi(`/member/wheels/${props.wheelId}/history`, 'GET', null, {
+      page: 1,
+      limit: 20,
+      order: 'desc'
+    })
+    
+    if (response && response.spins) {
+      // Process recent wins (matching BackOffice structure)
+      recentWins.value = response.spins.map(spin => {
+        // Get winning item data (matching BackOffice fields)
+        const winningItem = spin.winning_item || {
+          id: spin.winning_item_id,
+          name: spin.item_name || spin.winning_item?.name,
+          type: spin.item_type || spin.winning_item?.type || 'points',
+          value: parseFloat(spin.item_value || spin.winning_item?.value || 0),
+          icon: spin.item_icon || spin.winning_item?.icon || '🎁',
+          image: spin.winning_item?.image,
+          description: spin.winning_item?.description,
+          probability: spin.winning_item?.probability
+        }
+        
+        return {
+          id: spin.id,
+          spun_at: spin.spun_at || spin.created_at,
+          member_name: spin.member_name || spin.member_id,
+          winning_item: winningItem,
+          // Keep legacy fields for backward compatibility
+          item_icon: winningItem.icon,
+          item_value: winningItem.value,
+          item_name: winningItem.name,
+          item_type: winningItem.type,
+          // Determine if it's a big win (matching BackOffice logic)
+          isBigWin: winningItem.value >= 100 || winningItem.type === 'voucher' || winningItem.type === 'item'
+        }
+      })
+      
+      // For top wins, sort by value and take top 10
+      topWins.value = [...recentWins.value]
+        .sort((a, b) => (b.winning_item?.value || b.item_value || 0) - (a.winning_item?.value || a.item_value || 0))
+        .slice(0, 10)
+    }
+  } catch (err) {
+    error.value = err.message || 'Failed to load spin history'
+    console.error('Error fetching spin history:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Format date helper
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A'
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+// Get prize type label (matching BackOffice structure)
+const getPrizeTypeLabel = (type) => {
+  if (!type) return 'Points'
+  if (type === 'points') return 'Points'
+  if (type === 'voucher') return 'Voucher'
+  if (type === 'item') return 'Item'
+  return type.charAt(0).toUpperCase() + type.slice(1)
+}
 
 const displayedWins = computed(() => {
   return activeTab.value === 'recent' ? recentWins.value : topWins.value
+})
+
+// Watch for wheelId changes
+watch(() => props.wheelId, (newId) => {
+  if (newId) {
+    fetchSpinHistory()
+  }
+})
+
+onMounted(() => {
+  if (props.wheelId) {
+    fetchSpinHistory()
+  }
 })
 </script>
 
@@ -243,6 +354,7 @@ const displayedWins = computed(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-direction: row;
 }
 
 .prize-icon {
@@ -250,10 +362,36 @@ const displayedWins = computed(() => {
   filter: drop-shadow(0 0 5px rgba(122, 77, 246, 0.6));
 }
 
+.prize-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.prize-name-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  font-size: 12px;
+}
+
 .points {
   color: rgba(122, 77, 246, 0.9);
   font-weight: 600;
   font-size: 13px;
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
+
+.error-state {
+  color: rgba(255, 107, 107, 0.9);
 }
 
 /* Mobile Responsiveness */
