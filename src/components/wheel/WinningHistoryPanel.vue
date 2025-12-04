@@ -108,7 +108,7 @@ const fetchSpinHistory = async () => {
         return {
           id: spin.id,
           spun_at: spin.spun_at || spin.created_at,
-          member_name: spin.member_name || spin.member_id,
+          member_name: spin.member_name || spin.member_user_id,
           winning_item: winningItem,
           // Keep legacy fields for backward compatibility
           item_icon: winningItem.icon,

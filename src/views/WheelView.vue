@@ -364,10 +364,8 @@ const fetchActiveWheels = async () => {
       currentWheel.value = response.wheels[0]
       await fetchWheelItems(currentWheel.value.id)
       
-      // Update spins left based on eligibility
-      if (currentWheel.value.eligibility) {
-        spinsLeft.value = currentWheel.value.eligibility.spins_remaining || 0
-      }
+      // Fetch spin count from the new endpoint
+      await fetchSpinCount(currentWheel.value.id)
     } else {
       error.value = 'No active wheels available'
       showError('No Wheels Available', 'There are no active wheels at this time.')
@@ -377,6 +375,29 @@ const fetchActiveWheels = async () => {
     showError('Error', 'Failed to load wheels. Please try again later.')
   } finally {
     loading.value = false
+  }
+}
+
+const fetchSpinCount = async (wheelId) => {
+  try {
+    const spinCountData = await callApi(`/member/wheels/${wheelId}/spin-count`, 'GET')
+    
+    if (spinCountData) {
+      // Update spins left from the API response
+      spinsLeft.value = spinCountData.remaining_spins || 0
+      
+      // Log eligibility info for debugging
+      if (!spinCountData.has_eligibility) {
+        console.log('No eligibility record found for this wheel')
+      }
+    } else {
+      // Fallback: if no eligibility system, set to 0 or a default
+      spinsLeft.value = 0
+    }
+  } catch (err) {
+    console.warn('Failed to fetch spin count:', err.message)
+    // On error, don't block the UI - just set to 0
+    spinsLeft.value = 0
   }
 }
 
@@ -480,7 +501,7 @@ const onStart = async () => {
             myLucky.value.stop(winningIndex)
           }, 4000)
           
-          // Decrement spins (will be updated after refetch)
+          // Optimistically decrement spins (will be updated after refetch)
           spinsLeft.value = Math.max(0, spinsLeft.value - 1)
         } else {
           // Fallback: use random index if item not found
@@ -488,6 +509,7 @@ const onStart = async () => {
           myLucky.value.play()
           const randomIndex = Math.floor(Math.random() * prizes.value.length)
           setTimeout(() => { myLucky.value.stop(randomIndex) }, 4000)
+          // Optimistically decrement spins (will be updated after refetch)
           spinsLeft.value = Math.max(0, spinsLeft.value - 1)
         }
       } else {
@@ -568,9 +590,9 @@ const onEnd = (prize) => {
     showCelebration.value = false
   }, 3800)
   
-  // Refresh wheel data to update spins remaining
+  // Refresh spin count after spin completes
   if (currentWheel.value) {
-    fetchActiveWheels()
+    fetchSpinCount(currentWheel.value.id)
   }
 }
 

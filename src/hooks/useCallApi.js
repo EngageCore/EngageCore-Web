@@ -24,7 +24,7 @@ export const useCallApi = () => {
 
       // Only set Content-Type for non-FormData requests
       // FormData needs the browser to set Content-Type automatically with boundary
-      if (!(data instanceof FormData)) {
+      if (!(data instanceof FormData) && data !== null && data !== undefined) {
         headers['Content-Type'] = 'application/json';
       }
 
@@ -36,7 +36,7 @@ export const useCallApi = () => {
         // url: `${import.meta.env.VITE_API_URL}${url}`,
         url: `http://13.214.183.187:3000/api${url}`,
         method,
-        data,
+        ...(data !== null && data !== undefined && { data }), // Only include data if it's not null/undefined
         params, // Pass the query parameters here
         headers,
       });

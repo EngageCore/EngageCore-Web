@@ -65,6 +65,22 @@ export const wheelService = {
         error: error.message
       }
     }
+  },
+
+  // Get member's spin count for a wheel
+  async getSpinCount(wheelId) {
+    try {
+      const response = await apiGet(`/member/wheels/${wheelId}/spin-count`)
+      return {
+        success: true,
+        data: response
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      }
+    }
   }
 }
 
