@@ -14,46 +14,51 @@
     </div>
 
     <div class="grid grid-3-3-3-3" :class="{'centered': questList.length > 3 }">
-      <div :class="['quest-item', { completed: quest.completed }]" v-for="(quest, index) in questList.filter(quest => !quest.completed).slice(0, 3)" :key="quest.id">
-        <div class="quest-item-cover" :class="`cover-0${index + 1}`"></div>
+      <template v-if="questList.filter(quest => !quest.completed && quest.type !== 'custom').slice(0, 3).length > 0">
+        <div :class="['quest-item', { completed: quest.completed }]" v-for="(quest, index) in questList.filter(quest => !quest.completed && quest.type !== 'custom').slice(0, 3)" :key="quest.id">
+          <div class="quest-item-cover" :class="`cover-0${index + 1}`"></div>
 
-        <p class="text-sticker small-text">
-          <svg class="text-sticker-icon icon-plus-small">
-            <use xlink:href="#svg-plus-small"></use>
-          </svg>
-          SGD {{ quest.reward_amount }} 
-        </p>
+          <p class="text-sticker small-text">
+            <svg class="text-sticker-icon icon-plus-small">
+              <use xlink:href="#svg-plus-small"></use>
+            </svg>
+            SGD {{ quest.reward_amount }} 
+          </p>
 
-        <div class="quest-item-info">
-          <div class="quest-item-badge">
-            <img :src="quest.imgSrc" alt="gold-badge">
-          </div>
-
-          <p class="quest-item-title">{{ quest.name }}</p>
-          <p class="quest-item-text">{{ quest.description }}</p>
-
-          <div class="progress-stat">
-            <div class="progress-stat-bar">
-              <div class="progress" :style="{ '--percent': quest.target ? ((quest.current / quest.target) * 100).toFixed(2) + '%' : '0%' }"></div>
+          <div class="quest-item-info">
+            <div class="quest-item-badge">
+              <img :src="quest.imgSrc" alt="gold-badge">
             </div>
 
-            <div class="bar-progress-wrap small">
-              <p class="bar-progress-info negative start">
-                <span class="bar-progress-text no-space">
-                  <template v-if="quest.type === 'accumulate_deposit' && !quest.completed">
-                    {{ quest.target ? ((quest.current / quest.target) * 100).toFixed(2) : 0 }}%
-                  </template>
+            <p class="quest-item-title">{{ quest.name }}</p>
+            <p class="quest-item-text">{{ quest.description }}</p>
 
-                  <template v-else-if="quest.type === 'deposit' && !quest.completed">
-                    {{ quest.current }} / {{ quest.target }}
-                  </template>
-                </span>completed
-              </p>
+            <div class="progress-stat">
+              <div class="progress-stat-bar">
+                <div class="progress" :style="{ '--percent': quest.target ? ((quest.current / quest.target) * 100).toFixed(2) + '%' : '0%' }"></div>
+              </div>
+
+              <div class="bar-progress-wrap small">
+                <p class="bar-progress-info negative start">
+                  <span class="bar-progress-text no-space">
+                    <template v-if="quest.type === 'accumulate_deposit' && !quest.completed">
+                      {{ quest.target ? ((quest.current / quest.target) * 100).toFixed(2) : 0 }}%
+                    </template>
+
+                    <template v-else-if="quest.type === 'deposit' && !quest.completed">
+                      {{ quest.current }} / {{ quest.target }}
+                    </template>
+                  </span>completed
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div class="quest-item-meta"></div>
+            <div class="quest-item-meta"></div>
+          </div>
         </div>
+      </template>
+      <div v-if="questList.filter(q => !q.completed && q.type !== 'custom').length === 0">
+        <p class="no-quests">No featured quests available.</p>
       </div>
     </div>
 
@@ -131,7 +136,8 @@
         <div class="table-row small" v-for="quest in questList" :key="quest.id">
           <div class="table-column">
             <div class="table-information">
-              <img :src="quest.imgSrc" class="table-image" style="width: 30px; height: 30px;" />
+              <img v-if="quest.hasImage" :src="quest.imgSrc" class="table-image" style="width: 30px; height: 30px;" />
+              <img v-else src="@/assets/img/quest/completedq-b.png" class="table-image" style="width: 30px; height: 30px;" />
               <p class="table-title">{{ quest.name }}</p>
             </div>
           </div>
@@ -158,9 +164,12 @@
                 <template v-else-if="quest.type === 'deposit' && !quest.completed">
                   {{ quest.current }} / {{ quest.target }}
                 </template>
+                <template v-else-if="quest.type === 'custom' && !quest.completed">
+                  Contact CS to complete
+                </template>
               </p>
             </div>
-            <button v-else-if="quest.completed && quest.status === 'active'" @click="openClaimModal(quest)" class="button secondary">Claim Reward</button>
+            <button v-else-if="quest.completed && quest.status === 'active' && quest.type !== 'custom'" @click="openClaimModal(quest)" class="button secondary">Claim Reward</button>
             <button v-else-if="quest.status === 'pending'" class="button disabled" disabled>Pending</button>
             <button v-else class="button disabled" disabled>Claimed</button>
           </div>
@@ -285,7 +294,8 @@ const getQuest = async () => {
     
     questList.value = resp.map(q => ({
       ...q,
-      imgSrc: `http://13.214.183.187:3000${q.image}`
+      imgSrc: `http://13.214.183.187:3000${q.image}`,
+      hasImage: q.image !== null
     }));
   } catch (error) {
     showError('Error', 'An unexpected error occurred while fetching quests.')
