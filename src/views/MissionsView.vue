@@ -153,25 +153,57 @@
             </p>
           </div>
           <div class="table-column padded-big-left">
-            <div class="progress-container" v-if="!quest.completed">
+            <div
+              v-if="quest.type === 'accumulate_deposit' && !quest.completed"
+              class="progress-container"
+            >
               <div class="progress-wrapper">
-                <div class="progress" :style="{ '--percent': quest.target ? ((quest.current / quest.target) * 100).toFixed(2) + '%' : '0%' }"></div>
+                <div
+                  class="progress"
+                  :style="{
+                    '--percent': quest.target
+                      ? ((quest.current / quest.target) * 100).toFixed(2) + '%'
+                      : '0%'
+                  }"
+                ></div>
               </div>
+
               <p class="text-sticker void progress-text">
-                <template v-if="quest.type === 'accumulate_deposit' && !quest.completed">
-                  {{ quest.target ? ((quest.current / quest.target) * 100).toFixed(2) : 0 }}%
-                </template>
-                <template v-else-if="quest.type === 'deposit' && !quest.completed">
-                  {{ quest.current }} / {{ quest.target }}
-                </template>
-                <template v-else-if="quest.type === 'custom' && !quest.completed">
-                  Contact CS to complete
-                </template>
+                {{ quest.target ? ((quest.current / quest.target) * 100).toFixed(2) : 0 }}%
               </p>
             </div>
-            <button v-else-if="quest.completed && quest.status === 'active' && quest.type !== 'custom'" @click="openClaimModal(quest)" class="button secondary">Claim Reward</button>
-            <button v-else-if="quest.status === 'pending'" class="button disabled" disabled>Pending</button>
-            <button v-else class="button disabled" disabled>Claimed</button>
+
+            <button
+              v-else-if="quest.type === 'custom' && !quest.completed"
+              class="button disabled"
+              disabled
+            >
+              Contact CS to complete
+            </button>
+
+            <button
+              v-else-if="quest.completed && quest.status === 'active' && quest.type !== 'custom'"
+              @click="openClaimModal(quest)"
+              class="button secondary"
+            >
+              Claim Reward
+            </button>
+
+            <button
+              v-else-if="quest.status === 'pending'"
+              class="button disabled"
+              disabled
+            >
+              Pending
+            </button>
+
+            <button
+              v-else
+              class="button disabled"
+              disabled
+            >
+              Claimed
+            </button>
           </div>
         </div>
       </div>
