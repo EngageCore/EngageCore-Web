@@ -1,11 +1,13 @@
 <template>
   <div class="content-grid">
+    <!-- ================= Banner ================= -->
     <div class="section-banner">
       <img class="section-banner-icon" src="@/assets/img/banner/quests-icon.png" alt="quests-icon">
       <p class="section-banner-title">Quests</p>
       <p class="section-banner-text">Complete quests to gain experience and level up!</p>
     </div>
 
+    <!-- ================= Featured ================= -->
     <div class="section-header">
       <div class="section-header-info">
         <p class="section-pretitle">Get an early lead!</p>
@@ -13,21 +15,27 @@
       </div>
     </div>
 
-    <div class="grid grid-3-3-3-3" :class="{'centered': questList.length > 3 }">
-      <template v-if="questList.filter(quest => !quest.completed && quest.type !== 'custom').slice(0, 3).length > 0">
-        <div :class="['quest-item', { completed: quest.completed }]" v-for="(quest, index) in questList.filter(quest => !quest.completed && quest.type !== 'custom').slice(0, 3)" :key="quest.id">
+    <div class="grid grid-3-3-3-3" :class="{ centered: questList.length > 3 }">
+      <template
+        v-if="questList.filter(q => !q.completed && q.type !== 'custom').slice(0, 3).length"
+      >
+        <div
+          v-for="(quest, index) in questList.filter(q => !q.completed && q.type !== 'custom').slice(0, 3)"
+          :key="quest.id"
+          :class="['quest-item', { completed: quest.completed }]"
+        >
           <div class="quest-item-cover" :class="`cover-0${index + 1}`"></div>
 
           <p class="text-sticker small-text">
             <svg class="text-sticker-icon icon-plus-small">
-              <use xlink:href="#svg-plus-small"></use>
+              <use xlink:href="#svg-plus-small" />
             </svg>
-            SGD {{ quest.reward_amount }} 
+            SGD {{ quest.reward_amount }}
           </p>
 
           <div class="quest-item-info">
             <div class="quest-item-badge">
-              <img :src="quest.imgSrc" alt="gold-badge">
+              <img :src="quest.imgSrc" class="quest-item-badge-img" alt="badge">
             </div>
 
             <p class="quest-item-title">{{ quest.name }}</p>
@@ -35,33 +43,29 @@
 
             <div class="progress-stat">
               <div class="progress-stat-bar">
-                <div class="progress" :style="{ '--percent': quest.target ? ((quest.current / quest.target) * 100).toFixed(2) + '%' : '0%' }"></div>
+                <div
+                  class="progress"
+                  :style="{ '--percent': quest.target ? ((quest.current / quest.target) * 100).toFixed(2) + '%' : '0%' }"
+                />
               </div>
 
               <div class="bar-progress-wrap small">
                 <p class="bar-progress-info negative start">
                   <span class="bar-progress-text no-space">
-                    <template v-if="quest.type === 'accumulate_deposit' && !quest.completed">
-                      {{ quest.target ? ((quest.current / quest.target) * 100).toFixed(2) : 0 }}%
-                    </template>
-
-                    <template v-else-if="quest.type === 'deposit' && !quest.completed">
-                      {{ quest.current }} / {{ quest.target }}
-                    </template>
-                  </span>completed
+                    {{ quest.target ? ((quest.current / quest.target) * 100).toFixed(2) : 0 }}%
+                  </span>
+                  completed
                 </p>
               </div>
             </div>
-
-            <div class="quest-item-meta"></div>
           </div>
         </div>
       </template>
-      <div v-if="questList.filter(q => !q.completed && q.type !== 'custom').length === 0">
-        <p class="no-quests">No featured quests available.</p>
-      </div>
+
+      <p v-else class="no-quests">No featured quests available.</p>
     </div>
 
+    <!-- ================= Filters ================= -->
     <div class="section-header">
       <div class="section-header-info">
         <p class="section-pretitle">Gain EXP and level up!</p>
@@ -73,86 +77,67 @@
       <form class="form">
         <div class="form-item split medium">
           <div class="form-select">
-            <label for="quest-filter-show">Show</label>
-            <select id="quest-filter-show" name="quest_filter_show" v-model="status">
+            <label>Show</label>
+            <select v-model="status">
               <option value="">All Quests</option>
-              <option value="claimed">Completed Quests</option>
-              <option value="active">Open Quests</option>
-              <option value="pending">Pending Quests</option>
+              <option value="claimed">Completed</option>
+              <option value="active">Open</option>
+              <option value="pending">Pending</option>
             </select>
-            <svg class="form-select-icon icon-small-arrow">
-              <use xlink:href="#svg-small-arrow"></use>
-            </svg>
           </div>
 
           <div class="form-select">
-            <label for="quest-filter-criteria">Filter By</label>
-            <select id="quest-filter-criteria" name="quest_filter_criteria" v-model="type">
+            <label>Filter By</label>
+            <select v-model="type">
               <option value="">All</option>
               <option value="accumulate_deposit">Quest Progress</option>
-              <option value="deposit">Quest Times</option>
+              <option value="custom">Custom</option>
             </select>
-            <svg class="form-select-icon icon-small-arrow">
-              <use xlink:href="#svg-small-arrow"></use>
-            </svg>
           </div>
 
           <div class="form-select">
-            <label for="quest-filter-order">Order By</label>
-            <select id="quest-filter-order" name="quest_filter_order" v-model="order">
+            <label>Order By</label>
+            <select v-model="order">
               <option value="desc">Descending</option>
               <option value="asc">Ascending</option>
             </select>
-            <svg class="form-select-icon icon-small-arrow">
-              <use xlink:href="#svg-small-arrow"></use>
-            </svg>
           </div>
 
-          <button type="button" class="button secondary" @click="getQuest">Filter Quests</button>
+          <button type="button" class="button secondary" @click="getQuest">
+            Filter Quests
+          </button>
         </div>
       </form>
     </div>
 
+    <!-- ================= Table ================= -->
     <div class="table table-quests split-rows">
       <div class="table-header">
-        <div class="table-header-column">
-          <p class="table-header-title">Quest</p>
-        </div>
-
-        <div class="table-header-column">
-          <p class="table-header-title">Description</p>
-        </div>
-
-        <div class="table-header-column centered padded-big-left">
-          <p class="table-header-title">Reward</p>
-        </div>
-
-        <div class="table-header-column centered">
-          <p class="table-header-title">Progress</p>
-        </div>
+        <div class="table-header-column">Quest</div>
+        <div class="table-header-column">Description</div>
+        <div class="table-header-column centered padded-big-left">Reward</div>
+        <div class="table-header-column centered">Progress</div>
       </div>
 
       <div class="table-body same-color-rows">
         <div class="table-row small" v-for="quest in questList" :key="quest.id">
           <div class="table-column">
             <div class="table-information">
-              <img v-if="quest.hasImage" :src="quest.imgSrc" class="table-image" style="width: 30px; height: 30px;" />
-              <img v-else src="@/assets/img/quest/completedq-b.png" class="table-image" style="width: 30px; height: 30px;" />
+              <img :src="quest.hasImage ? quest.imgSrc : defaultIcon" class="table-image">
               <p class="table-title">{{ quest.name }}</p>
             </div>
           </div>
+
           <div class="table-column">
             <p class="table-text">{{ quest.description }}</p>
           </div>
+
           <div class="table-column centered padded-big-left">
-            <p class="text-sticker void">
-              <svg class="text-sticker-icon icon-plus-small">
-                <use xlink:href="#svg-plus-small"></use>
-              </svg>
-              SGD {{ quest.reward_amount }}
-            </p>
+            <p class="text-sticker void">SGD {{ quest.reward_amount }}</p>
           </div>
+
           <div class="table-column padded-big-left">
+            <!-- accumulate_deposit progress -->
             <div
               v-if="quest.type === 'accumulate_deposit' && !quest.completed"
               class="progress-container"
@@ -160,35 +145,33 @@
               <div class="progress-wrapper">
                 <div
                   class="progress"
-                  :style="{
-                    '--percent': quest.target
-                      ? ((quest.current / quest.target) * 100).toFixed(2) + '%'
-                      : '0%'
-                  }"
-                ></div>
+                  :style="{ '--percent': quest.target ? ((quest.current / quest.target) * 100).toFixed(2) + '%' : '0%' }"
+                />
               </div>
-
               <p class="text-sticker void progress-text">
                 {{ quest.target ? ((quest.current / quest.target) * 100).toFixed(2) : 0 }}%
               </p>
             </div>
 
+            <!-- custom active -->
             <button
-              v-else-if="quest.type === 'custom' && !quest.completed"
+              v-else-if="quest.type === 'custom' && quest.status === 'active'"
+              class="button secondary"
+              @click="openClaimModal(quest)"
+            >
+              Claim Reward
+            </button>
+
+            <!-- custom pending -->
+            <button
+              v-else-if="quest.type === 'custom' && quest.status === 'pending'"
               class="button disabled"
               disabled
             >
               Contact CS to complete
             </button>
 
-            <button
-              v-else-if="quest.completed && quest.status === 'active' && quest.type !== 'custom'"
-              @click="openClaimModal(quest)"
-              class="button secondary"
-            >
-              Claim Reward
-            </button>
-
+            <!-- pending -->
             <button
               v-else-if="quest.status === 'pending'"
               class="button disabled"
@@ -197,11 +180,8 @@
               Pending
             </button>
 
-            <button
-              v-else
-              class="button disabled"
-              disabled
-            >
+            <!-- claimed -->
+            <button v-else class="button disabled" disabled>
               Claimed
             </button>
           </div>
@@ -209,134 +189,106 @@
       </div>
     </div>
 
-    <!-- Claim Reward Modal -->
+    <!-- ================= Claim Modal ================= -->
     <div v-if="showClaimModal" class="modal-overlay" @click="closeClaimModal">
       <div class="popup-box small claim-modal" @click.stop>
-        <!-- Modal Header -->
-        <div class="popup-box-header">
-          <button class="popup-close-button" @click="closeClaimModal">
-            <svg class="popup-close-button-icon icon-cross">
-              <use xlink:href="#svg-cross"></use>
-            </svg>
-          </button>
-        </div>
 
-        <!-- Modal Content -->
-        <div class="popup-box-body">
-          <div class="popup-box-content">
-            <!-- Trophy Icon -->
-            <div class="claim-modal-icon">
-              <img src="@/assets/img/icons/trophy-reward.svg" alt="Trophy" class="trophy-icon" />
-            </div>
+        <!-- Header -->
+        <div class="claim-modal-header">
+          <h3 class="claim-title">Quest Completed!</h3>
 
-            <!-- Quest Info -->
-            <div class="claim-modal-info">
-              <h3 class="popup-box-title">Quest Completed!</h3>
-              <p class="popup-box-subtitle">
-                <span class="light">You have successfully completed:</span>
-              </p>
-              <p class="quest-completed-title">{{ selectedQuest?.name }}</p>
-            </div>
-
-            <!-- Reward Info -->
-            <div class="claim-modal-reward">
-              <div class="reward-badge">
-                <svg class="text-sticker-icon icon-plus-small">
-                  <use xlink:href="#svg-plus-small"></use>
-                </svg>
-                <span class="reward-amount">SGD {{ selectedQuest?.reward_amount }}</span>
-              </div>
-              <p class="reward-text">The reward will be credit to your account once approved.</p>
-            </div>
+          <div class="claim-reward">
+            <span class="claim-reward-label">Reward</span>
+            <span class="claim-reward-amount">
+              SGD {{ selectedQuest?.reward_amount }}
+            </span>
           </div>
         </div>
 
-        <!-- Modal Actions -->
-        <div class="popup-box-actions">
-          <button class="button secondary popup-box-action" @click="closeClaimModal">Close</button>
-          <button class="button primary popup-box-action" @click="claimReward">Claim Reward</button>
+        <!-- Body -->
+        <div class="claim-modal-body">
+          <p class="claim-subtitle">You have successfully completed</p>
+          <p class="claim-quest-name">{{ selectedQuest?.name }}</p>
         </div>
+
+        <!-- Actions -->
+        <div class="claim-modal-actions">
+          <button class="button secondary" @click="closeClaimModal">
+            Close
+          </button>
+
+          <button class="button primary" @click="claimReward">
+            Claim Reward
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { useNotification } from '@/composables/useNotification'
-import { computed, ref, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useCallApi } from '@/hooks/useCallApi'
+import { useNotification } from '@/composables/useNotification'
 
 const { callApi } = useCallApi()
-// Notification system
-const { showSuccess, showError, showWarning, showConfirmation } = useNotification()
+const { showSuccess, showError } = useNotification()
 
-// Modal state management
-const showClaimModal = ref(false)
+const questList = ref([])
 const selectedQuest = ref(null)
-const questList = ref([]);
+const showClaimModal = ref(false)
 
-// Modal functions
-const openClaimModal = (quest) => {
+const type = ref('')
+const status = ref('')
+const order = ref('desc')
+
+const defaultIcon = '@/assets/img/quest/completedq-b.png'
+
+const openClaimModal = quest => {
   selectedQuest.value = quest
   showClaimModal.value = true
-  document.body.style.overflow = 'hidden' // Prevent background scroll
 }
 
 const closeClaimModal = () => {
   showClaimModal.value = false
   selectedQuest.value = null
-  document.body.style.overflow = 'auto' // Restore scroll
 }
 
 const claimReward = async () => {
   try {
-    await callApi("/member/missions/claim", "POST", { mission_id: selectedQuest.value.id });
+    await callApi('/member/missions/claim', 'POST', {
+      mission_id: selectedQuest.value.id
+    })
 
-    showSuccess(
-      'Reward claim submitted!',
-      `You've submitted a claim for "${selectedQuest.value.name}".\nIt will credit into your account once approved.`
-    )
-    
-    getQuest();
-  } catch (error) {
-    showError('Error', 'An unexpected error occurred while fetching quests.')
+    showSuccess('Claim submitted', 'Reward will be credited once approved')
+    getQuest()
+  } catch {
+    showError('Error', 'Failed to claim reward')
   } finally {
     closeClaimModal()
   }
-};
+}
 
-const type = ref('');
-const status = ref('');
-const order = ref('desc');
 const getQuest = async () => {
   try {
-    const params = {
-      order: order.value,
-    }
+    const params = { order: order.value }
+    if (type.value) params.type = type.value
+    if (status.value) params.status = status.value
 
-    if(type.value) {
-      params.type = type.value
-    }
+    const resp = await callApi('/member/missions', 'GET', null, params)
 
-    if(status.value) {
-      params.status = status.value
-    }
-    
-    const resp = await callApi("/member/missions", "GET", null, params);
-    
     questList.value = resp.map(q => ({
       ...q,
-      imgSrc: `http://13.214.183.187:3000${q.image}`,
-      hasImage: q.image !== null
-    }));
-  } catch (error) {
-    showError('Error', 'An unexpected error occurred while fetching quests.')
+      imgSrc: q.image ? `http://13.214.183.187:3000${q.image}` : null,
+      hasImage: !!q.image
+    }))
+  } catch {
+    showError('Error', 'Failed to fetch quests')
   }
 }
 
-onMounted(() => {
-  getQuest()
-})
+onMounted(getQuest)
 </script>
 
 <style scoped>
@@ -625,4 +577,98 @@ onMounted(() => {
 .table-column.centered .text-sticker {
   justify-content: center !important;
 }
+
+.quest-item-badge-img, .table-image {
+  width: 46px;
+  height: 46px;
+}
+
+/* ================= Claim Modal Fix ================= */
+
+.claim-modal {
+  padding: 0;
+}
+
+/* Header */
+.claim-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.claim-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+/* Reward (right top) */
+.claim-reward {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.claim-reward-label {
+  font-size: 0.75rem;
+  color: #9aa4bf;
+  margin-bottom: 2px;
+}
+
+.claim-reward-amount {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #4cd4f7;
+}
+
+/* Body */
+.claim-modal-body {
+  padding: 28px 32px;
+  text-align: center;
+}
+
+.claim-subtitle {
+  font-size: 0.875rem;
+  color: #9aa4bf;
+  margin-bottom: 12px;
+}
+
+.claim-quest-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #7750f8;
+  margin: 0;
+}
+
+/* Actions */
+.claim-modal-actions {
+  display: flex;
+  gap: 16px;
+  padding: 24px 32px 32px;
+}
+
+.claim-modal-actions .button {
+  flex: 1;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .claim-modal-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .claim-reward {
+    align-items: center;
+  }
+
+  .claim-modal-actions {
+    flex-direction: column;
+  }
+}
+
 </style>
