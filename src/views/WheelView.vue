@@ -86,14 +86,36 @@
 
           <!-- Simple Spin Button -->
           <div v-if="currentWheel" class="spin-button-area">
-            <button class="spin-btn" :class="{ 'spinning': isSpinning, 'disabled': spinsLeft <= 0 }"
-              :disabled="isSpinning || spinsLeft <= 0 || loading" @click="onStart">
+            <button class="spin-btn" :class="{ 'spinning': isSpinning, 'disabled': spinsLeft <= 0 || !isEligible }"
+              :disabled="isSpinning || spinsLeft <= 0 || !isEligible || loading" @click="onStart">
               {{ isSpinning ? 'SPINNING...' : `SPIN (${spinsLeft})` }}
             </button>
 
             <!-- Spin Counter -->
             <div class="spin-counter">
               <div class="counter-label">{{ spinsLeft }} spins remaining</div>
+            </div>
+
+            <!-- Deposit Requirement Info -->
+            <div v-if="depositInfo" class="deposit-info">
+              <div class="deposit-label">
+                <i class="ri-money-dollar-circle-line"></i>
+                Deposit Requirement: {{ formatCurrency(depositInfo.required) }}
+              </div>
+              <div class="deposit-details">
+                <span>Available: {{ formatCurrency(depositInfo.available) }}</span>
+                <span v-if="depositInfo.used > 0">Used: {{ formatCurrency(depositInfo.used) }}</span>
+              </div>
+              <div v-if="!depositInfo.sufficient" class="deposit-warning">
+                <i class="ri-alert-line"></i>
+                Insufficient deposit. Need {{ formatCurrency(depositInfo.required - depositInfo.available) }} more.
+              </div>
+            </div>
+
+            <!-- Eligibility Message -->
+            <div v-if="eligibilityMessage" class="eligibility-message" :class="{ 'error': !isEligible }">
+              <i :class="isEligible ? 'ri-checkbox-circle-line' : 'ri-close-circle-line'"></i>
+              {{ eligibilityMessage }}
             </div>
           </div>
         </div>
@@ -145,6 +167,9 @@ const currentWheel = ref(null)
 const wheelItems = ref([])
 const loading = ref(false)
 const error = ref(null)
+const depositInfo = ref(null)
+const isEligible = ref(true)
+const eligibilityMessage = ref('')
 
 // Sound effects
 const {
@@ -362,10 +387,23 @@ const fetchActiveWheels = async () => {
     if (response && response.wheels && response.wheels.length > 0) {
       // Use the first active wheel
       currentWheel.value = response.wheels[0]
+      
+      // Extract deposit info and eligibility from wheel response
+      if (currentWheel.value.deposit_info) {
+        depositInfo.value = currentWheel.value.deposit_info
+      }
+      if (currentWheel.value.eligibility) {
+        isEligible.value = currentWheel.value.eligibility.eligible
+        eligibilityMessage.value = currentWheel.value.eligibility.reason || ''
+      }
+      
       await fetchWheelItems(currentWheel.value.id)
       
       // Fetch spin count from the new endpoint
       await fetchSpinCount(currentWheel.value.id)
+      
+      // Also check eligibility separately to get latest status
+      await checkEligibility(currentWheel.value.id)
     } else {
       error.value = 'No active wheels available'
       showError('No Wheels Available', 'There are no active wheels at this time.')
@@ -376,6 +414,30 @@ const fetchActiveWheels = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const checkEligibility = async (wheelId) => {
+  try {
+    const response = await callApi(`/member/wheels/${wheelId}/eligibility`, 'GET')
+    
+    if (response && response.eligibility) {
+      isEligible.value = response.eligibility.eligible
+      eligibilityMessage.value = response.eligibility.reason || ''
+      
+      // Update deposit info if available
+      if (response.eligibility.deposit_info) {
+        depositInfo.value = response.eligibility.deposit_info
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to check eligibility:', err.message)
+    // Don't block UI on eligibility check failure
+  }
+}
+
+const formatCurrency = (amount) => {
+  if (amount == null || amount === undefined) return '0.00'
+  return parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 
 const fetchSpinCount = async (wheelId) => {
@@ -462,7 +524,7 @@ const fetchWheelItems = async (wheelId) => {
 
 //#region 游戏逻辑
 const onStart = async () => {
-  if (spinsLeft.value <= 0 || !currentWheel.value || isSpinning.value) return
+  if (spinsLeft.value <= 0 || !currentWheel.value || isSpinning.value || !isEligible.value) return
 
   // Play button click sound
   playButtonClick()
@@ -522,7 +584,18 @@ const onStart = async () => {
     if (wheelWrapper) {
       wheelWrapper.classList.remove('spinning')
     }
-    showError('Spin Failed', err.message || 'Failed to spin the wheel. Please try again.')
+    
+    // Check if it's a deposit-related error
+    const errorMsg = err.message || 'Failed to spin the wheel. Please try again.'
+    if (errorMsg.includes('deposit') || errorMsg.includes('Insufficient')) {
+      showError('Insufficient Deposit', errorMsg)
+      // Refresh eligibility to update UI
+      if (currentWheel.value) {
+        await checkEligibility(currentWheel.value.id)
+      }
+    } else {
+      showError('Spin Failed', errorMsg)
+    }
   }
 }
 
@@ -590,9 +663,10 @@ const onEnd = (prize) => {
     showCelebration.value = false
   }, 3800)
   
-  // Refresh spin count after spin completes
+  // Refresh spin count and eligibility after spin completes
   if (currentWheel.value) {
-    fetchSpinCount(currentWheel.value.id)
+    await fetchSpinCount(currentWheel.value.id)
+    await checkEligibility(currentWheel.value.id)
   }
 }
 
@@ -1232,6 +1306,85 @@ onMounted(() => {
   font-size: 14px;
   color: #888;
   font-weight: 500;
+}
+
+/* Deposit Info */
+.deposit-info {
+  margin-top: 15px;
+  padding: 12px 16px;
+  background: rgba(122, 77, 246, 0.1);
+  border: 1px solid rgba(122, 77, 246, 0.3);
+  border-radius: 8px;
+  text-align: center;
+  min-width: 280px;
+}
+
+.deposit-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.deposit-label i {
+  color: #7a4df6;
+}
+
+.deposit-details {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.deposit-warning {
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(255, 107, 107, 0.2);
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  border-radius: 6px;
+  font-size: 12px;
+  color: #ff6b6b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.deposit-warning i {
+  font-size: 14px;
+}
+
+/* Eligibility Message */
+.eligibility-message {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(76, 175, 80, 0.2);
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  color: #4caf50;
+}
+
+.eligibility-message.error {
+  background: rgba(255, 107, 107, 0.2);
+  border-color: rgba(255, 107, 107, 0.4);
+  color: #ff6b6b;
+}
+
+.eligibility-message i {
+  font-size: 16px;
 }
 
 /* Loading and Error States */
