@@ -96,22 +96,6 @@
               <div class="counter-label">{{ spinsLeft }} spins remaining</div>
             </div>
 
-            <!-- Deposit Requirement Info -->
-            <div v-if="depositInfo" class="deposit-info">
-              <div class="deposit-label">
-                <i class="ri-money-dollar-circle-line"></i>
-                Deposit Requirement: {{ formatCurrency(depositInfo.required) }}
-              </div>
-              <div class="deposit-details">
-                <span>Available: {{ formatCurrency(depositInfo.available) }}</span>
-                <span v-if="depositInfo.used > 0">Used: {{ formatCurrency(depositInfo.used) }}</span>
-              </div>
-              <div v-if="!depositInfo.sufficient" class="deposit-warning">
-                <i class="ri-alert-line"></i>
-                Insufficient deposit. Need {{ formatCurrency(depositInfo.required - depositInfo.available) }} more.
-              </div>
-            </div>
-
             <!-- Eligibility Message -->
             <div v-if="eligibilityMessage" class="eligibility-message" :class="{ 'error': !isEligible }">
               <i :class="isEligible ? 'ri-checkbox-circle-line' : 'ri-close-circle-line'"></i>
@@ -401,9 +385,6 @@ const fetchActiveWheels = async () => {
       
       // Fetch spin count from the new endpoint
       await fetchSpinCount(currentWheel.value.id)
-      
-      // Also check eligibility separately to get latest status
-      await checkEligibility(currentWheel.value.id)
     } else {
       error.value = 'No active wheels available'
       showError('No Wheels Available', 'There are no active wheels at this time.')
@@ -599,7 +580,7 @@ const onStart = async () => {
   }
 }
 
-const onEnd = (prize) => {
+const onEnd = async (prize) => {
   isSpinning.value = false
   
   // Get prize data (matching BackOffice structure)
@@ -663,10 +644,9 @@ const onEnd = (prize) => {
     showCelebration.value = false
   }, 3800)
   
-  // Refresh spin count and eligibility after spin completes
+  // Refresh spin count after spin completes
   if (currentWheel.value) {
     await fetchSpinCount(currentWheel.value.id)
-    await checkEligibility(currentWheel.value.id)
   }
 }
 

@@ -2,57 +2,75 @@
   <div class="winning-history-panel">
     <!-- Panel Header -->
     <div class="panel-header">
-      <h3 class="panel-title">🏆 Recent Winners</h3>
+      <div class="header-content">
+        <i class="ri-history-line header-icon"></i>
+        <h3 class="panel-title">Spin History</h3>
+      </div>
+      <button class="refresh-btn" @click="fetchSpinHistory" :disabled="loading" title="Refresh history">
+        <i class="ri-refresh-line" :class="{ 'spinning': loading }"></i>
+      </button>
     </div>
 
     <!-- Tab Buttons -->
     <div class="tab-buttons">
       <button class="tab-btn" :class="{ active: activeTab === 'recent' }" @click="activeTab = 'recent'">
-        Recent Wins
+        <i class="ri-time-line"></i>
+        <span>Recent</span>
       </button>
       <button class="tab-btn" :class="{ active: activeTab === 'top' }" @click="activeTab = 'top'">
-        Top Winners
+        <i class="ri-trophy-line"></i>
+        <span>Best Wins</span>
       </button>
     </div>
 
     <!-- Loading State -->
     <div v-if="loading" class="loading-state">
+      <div class="spinner"></div>
       <p>Loading history...</p>
     </div>
 
     <!-- Error State -->
     <div v-if="error && !loading" class="error-state">
+      <i class="ri-error-warning-line"></i>
       <p>{{ error }}</p>
+      <button class="retry-btn" @click="fetchSpinHistory">Try Again</button>
     </div>
 
     <!-- Empty State -->
     <div v-if="!loading && !error && displayedWins.length === 0" class="empty-state">
+      <i class="ri-inbox-line"></i>
       <p>No spin history available yet.</p>
     </div>
 
-      <!-- Winning History List -->
-    <div v-if="!loading && !error" class="history-list">
+    <!-- Winning History List -->
+    <div v-if="!loading && !error && displayedWins.length > 0" class="history-list">
       <div v-for="(win, index) in displayedWins" :key="win.id || index" class="history-item" :class="{ 'big-win': win.isBigWin }">
-        <div class="win-date">{{ formatDate(win.spun_at || win.created_at) }}</div>
-        <div class="win-details">
-          <div class="player-info">
-            <span class="player-name">{{ win.member_name || win.playerName || 'Player' }}</span>
-            <div class="win-amount">
-              <span class="prize-icon">{{ win.winning_item?.icon || win.item_icon || win.prize || '🎁' }}</span>
-              <div class="prize-info">
-                <span class="prize-name-text">{{ win.winning_item?.name || win.item_name || 'Prize' }}</span>
-                <span v-if="win.winning_item?.value || win.item_value" class="points">
-                  {{ win.winning_item?.value || win.item_value || 0 }} 
-                  {{ getPrizeTypeLabel(win.winning_item?.type || win.item_type) }}
-                </span>
-              </div>
+        <div class="item-header">
+          <div class="item-date">
+            <i class="ri-calendar-line"></i>
+            <span>{{ formatDate(win.spun_at || win.created_at) }}</span>
+          </div>
+          <div v-if="win.isBigWin" class="big-win-badge">
+            <i class="ri-star-fill"></i>
+            <span>Big Win</span>
+          </div>
+        </div>
+        <div class="item-content">
+          <div class="prize-display">
+            <div class="prize-icon-wrapper" :class="getPrizeTypeClass(win.winning_item?.type || win.item_type)">
+              <i :class="getPrizeIcon(win.winning_item?.type || win.item_type)"></i>
+            </div>
+            <div class="prize-details">
+              <span class="prize-name">{{ win.winning_item?.name || win.item_name || 'Prize' }}</span>
+              <span v-if="win.winning_item?.value || win.item_value" class="prize-value">
+                {{ formatValue(win.winning_item?.value || win.item_value) }} 
+                {{ getPrizeTypeLabel(win.winning_item?.type || win.item_type) }}
+              </span>
             </div>
           </div>
         </div>
       </div>
     </div>
-
-
   </div>
 </template>
 
@@ -99,7 +117,7 @@ const fetchSpinHistory = async () => {
           name: spin.item_name || spin.winning_item?.name,
           type: spin.item_type || spin.winning_item?.type || 'points',
           value: parseFloat(spin.item_value || spin.winning_item?.value || 0),
-          icon: spin.item_icon || spin.winning_item?.icon || '🎁',
+          icon: spin.item_icon || spin.winning_item?.icon,
           image: spin.winning_item?.image,
           description: spin.winning_item?.description,
           probability: spin.winning_item?.probability
@@ -155,6 +173,28 @@ const getPrizeTypeLabel = (type) => {
   return type.charAt(0).toUpperCase() + type.slice(1)
 }
 
+// Get prize icon based on type
+const getPrizeIcon = (type) => {
+  if (!type || type === 'points') return 'ri-coins-line'
+  if (type === 'voucher') return 'ri-coupon-line'
+  if (type === 'item') return 'ri-gift-line'
+  return 'ri-star-line'
+}
+
+// Get prize type class for styling
+const getPrizeTypeClass = (type) => {
+  if (!type || type === 'points') return 'type-points'
+  if (type === 'voucher') return 'type-voucher'
+  if (type === 'item') return 'type-item'
+  return 'type-default'
+}
+
+// Format value with commas
+const formatValue = (value) => {
+  if (!value) return '0'
+  return parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+}
+
 const displayedWins = computed(() => {
   return activeTab.value === 'recent' ? recentWins.value : topWins.value
 })
@@ -174,9 +214,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Import Gaming Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800&display=swap');
+/* Import RemixIcon */
+@import url('https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css');
 
 .winning-history-panel {
   width: 450px;
@@ -184,7 +223,7 @@ onMounted(() => {
   border: 1px solid rgba(122, 77, 246, 0.3);
   border-radius: 20px;
   padding: 24px;
-  font-family: 'Orbitron', 'Exo 2', monospace;
+  font-family: Titillium Web, sans-serif;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.3),
     0 0 20px rgba(122, 77, 246, 0.2);
@@ -204,13 +243,28 @@ onMounted(() => {
       rgba(122, 77, 246, 0.1) 0%,
       rgba(74, 31, 158, 0.1) 100%);
   pointer-events: none;
+  z-index: 0;
 }
 
 .panel-header {
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 24px;
   position: relative;
   z-index: 1;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-icon {
+  font-size: 24px;
+  color: rgba(122, 77, 246, 0.9);
+  filter: drop-shadow(0 0 8px rgba(122, 77, 246, 0.6));
 }
 
 .panel-title {
@@ -222,6 +276,52 @@ onMounted(() => {
   letter-spacing: 1px;
 }
 
+.refresh-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(122, 77, 246, 0.5);
+  border-radius: 50%;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  backdrop-filter: blur(10px);
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: rgba(122, 77, 246, 0.2);
+  border-color: rgba(122, 77, 246, 0.8);
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(122, 77, 246, 0.4);
+}
+
+.refresh-btn:active:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.refresh-btn i.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .tab-buttons {
   display: flex;
   margin-bottom: 20px;
@@ -229,6 +329,8 @@ onMounted(() => {
   overflow: hidden;
   border: 1px solid rgba(122, 77, 246, 0.3);
   background: rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 1;
 }
 
 .tab-btn {
@@ -237,12 +339,20 @@ onMounted(() => {
   background: transparent;
   color: rgba(255, 255, 255, 0.7);
   border: none;
-  font-family: 'Orbitron', 'Exo 2', monospace;
+  font-family: Titillium Web, sans-serif;
   font-weight: 500;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tab-btn i {
+  font-size: 16px;
 }
 
 .tab-btn:hover {
@@ -260,6 +370,8 @@ onMounted(() => {
   max-height: 400px;
   overflow-y: auto;
   padding-right: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 .history-list::-webkit-scrollbar {
@@ -316,69 +428,154 @@ onMounted(() => {
 }
 
 .history-item.big-win {
-  border-color: rgba(122, 77, 246, 0.6);
-  background: rgba(122, 77, 246, 0.1);
+  border-color: rgba(212, 175, 55, 0.4);
+  background: rgba(212, 175, 55, 0.1);
   animation: bigWinGlow 2s ease-in-out infinite alternate;
 }
 
 @keyframes bigWinGlow {
   0% {
-    box-shadow: 0 0 15px rgba(122, 77, 246, 0.4);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
   }
-
   100% {
-    box-shadow: 0 0 25px rgba(122, 77, 246, 0.6);
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.6);
   }
 }
 
-.win-date {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 8px;
-  font-weight: 500;
-}
-
-.player-info {
+.item-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 12px;
 }
 
-.player-name {
-  color: #fff;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.win-amount {
+.item-date {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-direction: row;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
 }
 
-.prize-icon {
-  font-size: 18px;
-  filter: drop-shadow(0 0 5px rgba(122, 77, 246, 0.6));
+.item-date i {
+  font-size: 14px;
+  color: rgba(122, 77, 246, 0.7);
 }
 
-.prize-info {
+.big-win-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+.big-win-badge i {
+  font-size: 12px;
+  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.6));
+}
+
+.item-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.prize-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.prize-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+  border: 2px solid;
+}
+
+.prize-icon-wrapper i {
+  font-size: 24px;
+  display: inline-block;
+  font-style: normal;
+  font-family: 'remixicon' !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure all RemixIcon classes work */
+[class^="ri-"],
+[class*=" ri-"] {
+  font-family: 'remixicon' !important;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: inline-block;
+}
+
+.prize-icon-wrapper.type-points {
+  background: linear-gradient(135deg, rgba(122, 77, 246, 0.15), rgba(74, 31, 158, 0.15));
+  color: #9d6fff;
+  border-color: rgba(122, 77, 246, 0.4);
+  box-shadow: 0 0 10px rgba(122, 77, 246, 0.3);
+}
+
+.prize-icon-wrapper.type-voucher {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(22, 163, 74, 0.15));
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+}
+
+.prize-icon-wrapper.type-item {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(255, 215, 0, 0.1));
+  color: #ffd700;
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+.prize-icon-wrapper.type-default {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.prize-details {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
 }
 
-.prize-name-text {
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 500;
-  font-size: 12px;
+.prize-name {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.3;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-.points {
+.prize-value {
   color: rgba(122, 77, 246, 0.9);
   font-weight: 600;
   font-size: 13px;
+  text-shadow: 0 0 8px rgba(122, 77, 246, 0.5);
 }
 
 .loading-state,
@@ -386,12 +583,58 @@ onMounted(() => {
 .empty-state {
   text-align: center;
   padding: 40px 20px;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.loading-state .spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(122, 77, 246, 0.3);
+  border-top-color: rgba(122, 77, 246, 1);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
 }
 
 .error-state {
   color: rgba(255, 107, 107, 0.9);
+}
+
+.error-state i {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 8px rgba(255, 107, 107, 0.5));
+}
+
+.retry-btn {
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #7a4df6 0%, #4a1f9e 100%);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(122, 77, 246, 0.3);
+}
+
+.retry-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(122, 77, 246, 0.4);
+  background: linear-gradient(135deg, #8a5df6 0%, #5a2fae 100%);
+}
+
+.empty-state i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+  color: rgba(122, 77, 246, 0.5);
 }
 
 /* Mobile Responsiveness */
