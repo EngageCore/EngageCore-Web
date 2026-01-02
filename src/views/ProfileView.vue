@@ -196,7 +196,7 @@ const formattedTierList = computed(() => {
       current = 0; // locked
     }
 
-    const imgSrc = `http://13.214.183.187:3000${tier.image}`;
+    const imgSrc = `${import.meta.env.VITE_API_URL}${tier.image}`;
 
     return {
       ...tier,

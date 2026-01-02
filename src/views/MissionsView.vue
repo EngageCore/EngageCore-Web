@@ -280,7 +280,7 @@ const getQuest = async () => {
 
     questList.value = resp.map(q => ({
       ...q,
-      imgSrc: q.image ? `http://13.214.183.187:3000${q.image}` : null,
+      imgSrc: q.image ? `${import.meta.env.VITE_API_URL}${q.image}` : null,
       hasImage: !!q.image
     }))
   } catch {

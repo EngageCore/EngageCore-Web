@@ -33,8 +33,7 @@ export const useCallApi = () => {
       }
 
       const response = await axios({
-        // url: `${import.meta.env.VITE_API_URL}${url}`,
-        url: `http://13.214.183.187:3000/api${url}`,
+        url: `${import.meta.env.VITE_API_URL}/api${url}`,
         method,
         ...(data !== null && data !== undefined && { data }), // Only include data if it's not null/undefined
         params, // Pass the query parameters here
