@@ -123,7 +123,7 @@
         <div class="table-row small" v-for="quest in questList" :key="quest.id">
           <div class="table-column">
             <div class="table-information">
-              <img :src="quest.hasImage ? quest.imgSrc : defaultIcon" class="table-image">
+              <img :src="quest.imgSrc" class="table-image">
               <p class="table-title">{{ quest.name }}</p>
             </div>
           </div>
@@ -277,10 +277,11 @@ const getQuest = async () => {
     if (status.value) params.status = status.value
 
     const resp = await callApi('/member/missions', 'GET', null, params)
+    const defaultQuestImg = new URL('@/assets/img/quest/completedq-b.png', import.meta.url).href
 
     questList.value = resp.map(q => ({
       ...q,
-      imgSrc: q.image ? `${import.meta.env.VITE_API_URL}${q.image}` : null,
+      imgSrc: q.image ? `${import.meta.env.VITE_API_URL}${q.image}` : defaultQuestImg,
       hasImage: !!q.image
     }))
   } catch {
