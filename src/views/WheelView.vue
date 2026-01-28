@@ -270,24 +270,15 @@ const prizes = computed(() => {
     // If item has an image, use it; otherwise use icon/emoji
     if (hasImage) {
       // Use image if available
+      const imgPx = isMobile ? 34 : 44
+      const imgSizeNum = parseFloat(getFontSize(imgPx, isMobile))
+      const imgSize = `${imgSizeNum}px`
       prizeConfig.imgs = [{
         src: `${import.meta.env.VITE_API_URL.replace('/api', '')}${item.image}`,
-        width: totalItems <= 4 ? "50%" : totalItems <= 6 ? "55%" : "60%",
-        height: totalItems <= 4 ? "50%" : totalItems <= 6 ? "55%" : "60%",
-        top: "8%",
-        left: "20%"
+        width: imgSize,
+        height: imgSize,
+        top: "30%"
       }]
-      // Show icon at top
-      if (displayIcon) {
-        fonts.push({
-          text: displayIcon,
-          fontColor: "#FFFFFF",
-          fontSize: getFontSize(isMobile ? 16 : 20, isMobile),
-          fontWeight: "bold",
-          top: "3%",
-          textShadow: "2px 2px 4px rgba(0, 0, 0, 0.8)"
-        })
-      }
       // Show name below image
       if (item.name) {
         fonts.push({
