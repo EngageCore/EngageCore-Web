@@ -12943,8 +12943,8 @@ figure>img {
 }
 
 .quest-item .quest-item-info {
-    padding: 44px 28px 0;
-    position: relative
+    padding: 44px 28px 28px;
+    position: relative;
 }
 
 .quest-item .quest-item-badge {

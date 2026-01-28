@@ -15,12 +15,12 @@
       </div>
     </div>
 
-    <div class="grid grid-3-3-3-3" :class="{ centered: questList.length > 3 }">
+    <div class="grid grid-3-3-3-3" :class="{ centered: questList.filter(q => !q.completed && q.type !== 'custom').slice(0, 4).length > 3 }">
       <template
-        v-if="questList.filter(q => !q.completed && q.type !== 'custom').slice(0, 3).length"
+        v-if="questList.filter(q => !q.completed && q.type !== 'custom').slice(0, 4).length"
       >
         <div
-          v-for="(quest, index) in questList.filter(q => !q.completed && q.type !== 'custom').slice(0, 3)"
+          v-for="(quest, index) in questList.filter(q => !q.completed && q.type !== 'custom').slice(0, 4)"
           :key="quest.id"
           :class="['quest-item', { completed: quest.completed }]"
         >
@@ -52,9 +52,8 @@
               <div class="bar-progress-wrap small">
                 <p class="bar-progress-info negative start">
                   <span class="bar-progress-text no-space">
-                    {{ quest.target ? ((quest.current / quest.target) * 100).toFixed(2) : 0 }}%
+                    SGD {{ formatAmount(quest.current) }} / {{ formatAmount(quest.target) }}
                   </span>
-                  completed
                 </p>
               </div>
             </div>
@@ -123,7 +122,7 @@
         <div class="table-row small" v-for="quest in questList" :key="quest.id">
           <div class="table-column">
             <div class="table-information">
-              <img :src="quest.hasImage ? quest.imgSrc : defaultIcon" class="table-image">
+              <img :src="quest.imgSrc" class="table-image">
               <p class="table-title">{{ quest.name }}</p>
             </div>
           </div>
@@ -132,7 +131,7 @@
             <p class="table-text">{{ quest.description }}</p>
           </div>
 
-          <div class="table-column centered padded-big-left">
+          <div class="table-column centered padded-big-left text-sticker-nowrap">
             <p class="text-sticker void">SGD {{ quest.reward_amount }}</p>
           </div>
 
@@ -147,10 +146,10 @@
                   class="progress"
                   :style="{ '--percent': quest.target ? ((quest.current / quest.target) * 100).toFixed(2) + '%' : '0%' }"
                 />
+                <p class="text-sticker void progress-text">
+                  SGD {{ formatAmount(quest.current) }} / {{ formatAmount(quest.target) }}
+                </p>
               </div>
-              <p class="text-sticker void progress-text">
-                {{ quest.target ? ((quest.current / quest.target) * 100).toFixed(2) : 0 }}%
-              </p>
             </div>
 
             <!-- custom active -->
@@ -277,10 +276,11 @@ const getQuest = async () => {
     if (status.value) params.status = status.value
 
     const resp = await callApi('/member/missions', 'GET', null, params)
+    const defaultQuestImg = new URL('@/assets/img/quest/completedq-b.png', import.meta.url).href
 
     questList.value = resp.map(q => ({
       ...q,
-      imgSrc: q.image ? `${import.meta.env.VITE_API_URL}${q.image}` : null,
+      imgSrc: q.image ? `${import.meta.env.VITE_API_URL}${q.image}` : defaultQuestImg,
       hasImage: !!q.image
     }))
   } catch {
@@ -288,10 +288,34 @@ const getQuest = async () => {
   }
 }
 
+const formatAmount = (number) => {
+  
+  if (typeof number === 'string') {
+    number = Number(number);
+  }
+
+  if (typeof number === 'number' && !isNaN(number)) {
+    const floatValue = number.toFixed(2);
+
+    const parts = floatValue.split('.');
+  
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  
+    return parts.join('.');
+  } else {
+    return "0.00";
+  }
+};
+
 onMounted(getQuest)
 </script>
 
 <style scoped>
+/* Table Header Styling */
+.table-header-column {
+  color: #ffffff;
+}
+
 .cover-01 {
   background: url('@/assets/img/quest/cover/01.png') no-repeat center/cover;
 }
@@ -670,5 +694,4 @@ onMounted(getQuest)
     flex-direction: column;
   }
 }
-
 </style>
