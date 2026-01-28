@@ -256,7 +256,7 @@ const prizes = computed(() => {
         prize_total_limit: item.prize_total_limit,
         prize_daily_limit: item.prize_daily_limit,
         icon: item.icon, // Already converted to emoji
-        image: item.image ? `${import.meta.env.VITE_API_URL.replace('/api', '')}/${item.image}` : '',
+        image: item.image,
         description: item.description,
         active: item.active,
         position: item.position !== undefined ? item.position : index
@@ -271,7 +271,7 @@ const prizes = computed(() => {
     if (hasImage) {
       // Use image if available
       prizeConfig.imgs = [{
-        src: item.image,
+        src: `${import.meta.env.VITE_API_URL.replace('/api', '')}${item.image}`,
         width: totalItems <= 4 ? "50%" : totalItems <= 6 ? "55%" : "60%",
         height: totalItems <= 4 ? "50%" : totalItems <= 6 ? "55%" : "60%",
         top: "8%",
