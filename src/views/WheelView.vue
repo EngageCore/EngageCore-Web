@@ -256,7 +256,7 @@ const prizes = computed(() => {
         prize_total_limit: item.prize_total_limit,
         prize_daily_limit: item.prize_daily_limit,
         icon: item.icon, // Already converted to emoji
-        image: item.image,
+        image: item.image ? `${import.meta.env.VITE_API_URL.replace('/api', '')}${item.image}` : '',
         description: item.description,
         active: item.active,
         position: item.position !== undefined ? item.position : index
