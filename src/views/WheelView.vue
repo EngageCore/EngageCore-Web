@@ -175,11 +175,16 @@ onUnmounted(() => window.removeEventListener("resize", handleResize))
 //#endregion
 
 //#region 转盘配置
-const blocks = [
-  { padding: "0px", background: "transparent", imgs: [{ src: baseSvg, width: "100%", height: "100%", top: "0%", left: "0%" }] },
-  { padding: "0px", background: "transparent", imgs: [{ src: segmentsSvg, width: "100%", height: "100%", top: "0%", left: "0%", rotate: true }] },
-  { padding: "0px", background: "transparent", imgs: [{ src: frameSvg, width: "100%", height: "100%", top: "0%", left: "0%" }] },
-]
+// Blocks: base + optional segment overlay (only when 8 segments so lines match) + frame
+const blocks = computed(() => {
+  const base = { padding: "0px", background: "transparent", imgs: [{ src: baseSvg, width: "100%", height: "100%", top: "0%", left: "0%" }] }
+  const frame = { padding: "0px", background: "transparent", imgs: [{ src: frameSvg, width: "100%", height: "100%", top: "0%", left: "0%" }] }
+  const segmentCount = wheelItems.value?.filter(item => item.active !== false).length ?? 0
+  const segmentLayer = segmentCount === 8
+    ? { padding: "0px", background: "transparent", imgs: [{ src: segmentsSvg, width: "100%", height: "100%", top: "0%", left: "0%", rotate: true }] }
+    : null
+  return segmentLayer ? [base, segmentLayer, frame] : [base, frame]
+})
 
 // Map wheel items to prizes format (matching BackOffice structure)
 const prizes = computed(() => {
@@ -362,6 +367,48 @@ const buttons = [
 //#endregion
 
 //#region API Functions
+// Icon mapping for string icons to emojis (used by normalizeWheelItems)
+const iconMap = {
+  'coin': '🪙',
+  'diamond': '💎',
+  'star': '⭐',
+  'trophy': '🏆',
+  'gift': '🎁',
+  'crown': '👑',
+  'money': '💰',
+  'gem': '💠',
+  'medal': '🥇',
+  'prize': '🎁'
+}
+
+const getIconDisplay = (icon) => {
+  if (!icon) return '🎁'
+  if (/[\u{1F300}-\u{1F9FF}]/u.test(icon)) return icon
+  return iconMap[icon.toLowerCase()] || icon || '🎁'
+}
+
+// Normalize API wheel items to wheelItems format (shared by fetchActiveWheels and fetchWheelItems)
+const normalizeWheelItems = (items, defaultPositionByIndex = false) => {
+  if (!items || !Array.isArray(items)) return []
+  return items
+    .map((item, index) => ({
+      id: item.id,
+      name: item.name || '',
+      type: item.type || 'points',
+      value: parseFloat(item.value) || 0,
+      probability: parseFloat(item.probability) || 0,
+      prize_total_limit: item.prize_total_limit,
+      prize_daily_limit: item.prize_daily_limit,
+      icon: getIconDisplay(item.icon),
+      image: item.image || '',
+      description: item.description || '',
+      active: item.active !== false,
+      position: item.position !== undefined ? item.position : (defaultPositionByIndex ? index : 0)
+    }))
+    .filter(item => item.active)
+    .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+}
+
 const fetchActiveWheels = async () => {
   try {
     loading.value = true
@@ -381,7 +428,12 @@ const fetchActiveWheels = async () => {
         eligibilityMessage.value = currentWheel.value.eligibility.reason || ''
       }
       
-      await fetchWheelItems(currentWheel.value.id)
+      // Use items from active wheel response when present (supports 4, 6, 7, 8, or any count)
+      if (currentWheel.value.items && Array.isArray(currentWheel.value.items) && currentWheel.value.items.length > 0) {
+        wheelItems.value = normalizeWheelItems(currentWheel.value.items, true)
+      } else {
+        await fetchWheelItems(currentWheel.value.id)
+      }
       
       // Fetch spin count from the new endpoint
       await fetchSpinCount(currentWheel.value.id)
@@ -444,55 +496,16 @@ const fetchSpinCount = async (wheelId) => {
   }
 }
 
-// Icon mapping for string icons to emojis
-const iconMap = {
-  'coin': '🪙',
-  'diamond': '💎',
-  'star': '⭐',
-  'trophy': '🏆',
-  'gift': '🎁',
-  'crown': '👑',
-  'money': '💰',
-  'gem': '💠',
-  'medal': '🥇',
-  'prize': '🎁'
-}
-
-const getIconDisplay = (icon) => {
-  if (!icon) return '🎁'
-  // If it's already an emoji, return it
-  if (/[\u{1F300}-\u{1F9FF}]/u.test(icon)) {
-    return icon
-  }
-  // Map string icons to emojis
-  return iconMap[icon.toLowerCase()] || icon || '🎁'
-}
-
 const fetchWheelItems = async (wheelId) => {
   try {
     loading.value = true
     const response = await callApi(`/member/wheels/${wheelId}/items`, 'GET')
     
-    if (response && response.wheel && response.wheel.items) {
-      // Use items directly from API response
-      wheelItems.value = response.wheel.items
-        .map(item => ({
-          // Map all fields from API response
-          id: item.id,
-          name: item.name || '',
-          type: item.type || 'points',
-          value: parseFloat(item.value) || 0,
-          probability: parseFloat(item.probability) || 0, // Backend: 0-1
-          prize_total_limit: item.prize_total_limit,
-          prize_daily_limit: item.prize_daily_limit,
-          icon: getIconDisplay(item.icon), // Convert icon string to emoji if needed
-          image: item.image || '',
-          description: item.description || '',
-          active: item.active !== false, // Default to true if not specified
-          position: item.position !== undefined ? item.position : 0
-        }))
-        .filter(item => item.active) // Only show active items
-        .sort((a, b) => (a.position || 0) - (b.position || 0)) // Sort by position
+    // Support multiple API response shapes: response.wheel.items, response.message.data.wheel.items, response.data.wheel.items
+    const wheelData = response?.wheel ?? response?.message?.data?.wheel ?? response?.data?.wheel
+    const items = wheelData?.items
+    if (items && Array.isArray(items)) {
+      wheelItems.value = normalizeWheelItems(items, true)
     }
   } catch (err) {
     error.value = err.message || 'Failed to fetch wheel items'
