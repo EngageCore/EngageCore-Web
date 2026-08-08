@@ -1,123 +1,86 @@
 #!/bin/bash
-
 set -e
 
-echo "Starting deployment..."
+NAME="engagecore-web"
+NEEDS_ENV=0
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
 
-# Configuration
-APP_NAME="engagecore-web"
-APP_DIR="/home/ec2-user/engagecore-web"
-CONTAINER_NAME="engagecore-web"
+# Deploy into the directory this script lives in. The workflow scp's the image
+# tarball and compose file alongside it, so this is always the right target.
+# (Previously hardcoded /home/ec2-user/... which breaks on any host whose login
+# user is not ec2-user.)
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$APP_DIR"
 
-# Get version from argument or use latest
+# Compose v2 ships as a docker plugin; v1 (`docker-compose`) is not installed.
+if docker compose version >/dev/null 2>&1; then
+  DC="docker compose"
+elif command -v docker-compose >/dev/null 2>&1; then
+  DC="docker-compose"
+else
+  echo -e "${RED}Docker Compose is not available.${NC}"; exit 1
+fi
+
 VERSION=${1:-latest}
-if [ "$VERSION" = "latest" ]; then
-    # Try to read from VERSION.txt if it exists
-    if [ -f VERSION.txt ]; then
-        VERSION=$(cat VERSION.txt)
-    fi
+if [ "$VERSION" = "latest" ] && [ -f VERSION.txt ]; then VERSION=$(cat VERSION.txt); fi
+echo -e "${BLUE}Deploying $NAME version: $VERSION${NC}"
+echo -e "${BLUE}Directory: $APP_DIR   Compose: $DC${NC}"
+
+command -v docker >/dev/null 2>&1 || { echo -e "${RED}Docker is not installed.${NC}"; exit 1; }
+
+mkdir -p logs uploads
+
+if [ "$NEEDS_ENV" = "1" ] && [ ! -f .env ]; then
+  # Deliberately NOT generating a template here. The old script wrote one
+  # containing real-looking DB credentials, which then silently started the
+  # container against the wrong database.
+  echo -e "${RED}.env is missing in $APP_DIR.${NC}"
+  echo -e "${YELLOW}Create it before deploying (DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, JWT_SECRET...).${NC}"
+  exit 1
 fi
 
-echo -e "${BLUE}Deploying version: $VERSION${NC}"
+# The app network is created once, outside any single compose project.
+docker network inspect engage-net >/dev/null 2>&1 || \
+  docker network create --driver bridge --subnet 172.20.0.0/16 --gateway 172.20.0.1 engage-net
 
-# Check if Docker is installed
-if ! command -v docker &> /dev/null; then
-    echo -e "${RED}Docker is not installed. Please install Docker first.${NC}"
-    exit 1
-fi
-
-# Check if Docker Compose is installed
-if ! command -v docker-compose &> /dev/null; then
-    echo -e "${YELLOW}Docker Compose not found. Installing...${NC}"
-    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-fi
-
-# Create app directory if it doesn't exist
-mkdir -p "$APP_DIR"
-
-# Navigate to app directory
-cd "$APP_DIR" || exit 1
-
-echo -e "${GREEN}Loading Docker image...${NC}"
-# Load the Docker image
-if [ -f "engagecore-web-$VERSION.tar.gz" ]; then
-    docker load < "engagecore-web-$VERSION.tar.gz"
-    # Tag as latest for convenience
-    docker tag "engagecore-web:$VERSION" "engagecore-web:latest" 2>/dev/null || true
-elif [ -f "engagecore-web-latest.tar.gz" ]; then
-    docker load < engagecore-web-latest.tar.gz
-    VERSION="latest"
+echo -e "${GREEN}Loading image...${NC}"
+if   [ -f "$NAME-$VERSION.tar.gz" ]; then
+  docker load < "$NAME-$VERSION.tar.gz"
+  docker tag "$NAME:$VERSION" "$NAME:latest" 2>/dev/null || true
+elif [ -f "$NAME-latest.tar.gz" ]; then
+  docker load < "$NAME-latest.tar.gz"; VERSION="latest"
 else
-    echo -e "${RED}Error: Docker image file not found!${NC}"
-    exit 1
+  echo -e "${RED}No image tarball found in $APP_DIR${NC}"; exit 1
 fi
-
-# Save version info
 echo "$VERSION" > .current_version
-if [ -f VERSION.txt ]; then
-    cp VERSION.txt .deployed_version
-fi
 
-echo -e "${GREEN}Stopping existing container if running...${NC}"
-# Stop and remove existing container if it exists
-docker-compose down || true
+echo -e "${GREEN}Restarting container...${NC}"
+$DC down || true
+docker image prune -f >/dev/null 2>&1 || true
 
-# Keep old images for rollback (only prune dangling images, not versioned ones)
-echo -e "${GREEN}Cleaning up dangling images (keeping versioned images for rollback)...${NC}"
-docker image prune -f || true
-
-# List available versions
-echo -e "${BLUE}Available versions on this server:${NC}"
-docker images engagecore-web --format "table {{.Tag}}\t{{.CreatedAt}}\t{{.Size}}" | head -10
-
-echo -e "${GREEN}Starting new container with version: $VERSION${NC}"
-# Update docker-compose to use the specific version
 if [ "$VERSION" != "latest" ]; then
-    # Create a temporary docker-compose override
-    sed "s|engagecore-web:latest|engagecore-web:$VERSION|g" docker-compose.yml > docker-compose.versioned.yml
-    docker-compose -f docker-compose.versioned.yml up -d
+  sed "s|$NAME:latest|$NAME:$VERSION|g" docker-compose.yml > docker-compose.versioned.yml
+  $DC -f docker-compose.versioned.yml up -d
 else
-    # Start the new container
-    docker-compose up -d
+  $DC up -d
 fi
 
-echo -e "${GREEN}Waiting for container to be healthy...${NC}"
-# Wait for container to be healthy
-sleep 10
+echo -e "${GREEN}Waiting for container...${NC}"
+for i in $(seq 1 18); do
+  sleep 5
+  STATUS=$(docker inspect -f '{{.State.Health.Status}}' "$NAME" 2>/dev/null || echo "none")
+  RUNNING=$(docker inspect -f '{{.State.Running}}' "$NAME" 2>/dev/null || echo "false")
+  if [ "$STATUS" = "healthy" ] || { [ "$STATUS" = "none" ] && [ "$RUNNING" = "true" ]; }; then
+    echo -e "${GREEN}$NAME is up (health: $STATUS).${NC}"
+    docker ps --filter "name=$NAME" --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+    ls -t "$NAME"-*.tar.gz 2>/dev/null | tail -n +6 | xargs -r rm -f
+    echo -e "${GREEN}Deployed $NAME version $VERSION.${NC}"
+    exit 0
+  fi
+  [ "$RUNNING" = "false" ] && break
+done
 
-# Check if container is running
-if docker ps | grep -q "$CONTAINER_NAME"; then
-    echo -e "${GREEN}Container is running successfully!${NC}"
-    
-    # Show container logs
-    echo -e "${YELLOW}Container logs:${NC}"
-    docker-compose logs --tail=50
-    
-    # Show container status
-    echo -e "${YELLOW}Container status:${NC}"
-    docker ps | grep "$CONTAINER_NAME"
-    
-    echo -e "${GREEN}Deployment completed successfully!${NC}"
-else
-    echo -e "${RED}Container failed to start. Checking logs...${NC}"
-    docker-compose logs
-    exit 1
-fi
-
-# Cleanup old tar files (keep last 5 versions)
-echo -e "${GREEN}Cleaning up old deployment files (keeping last 5 versions)...${NC}"
-ls -t engagecore-web-*.tar.gz 2>/dev/null | tail -n +6 | xargs rm -f 2>/dev/null || true
-
-echo -e "${GREEN}Deployment process completed!${NC}"
-echo -e "${BLUE}Current deployed version: $VERSION${NC}"
-echo -e "${YELLOW}To rollback to a previous version, use: ./rollback.sh <version>${NC}"
-echo -e "${YELLOW}To list all available versions, use: ./list-versions.sh${NC}"
-
+echo -e "${RED}$NAME failed to come up. Logs:${NC}"
+$DC logs --tail=60
+exit 1
